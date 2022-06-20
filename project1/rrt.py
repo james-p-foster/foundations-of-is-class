@@ -5,20 +5,16 @@ from arena import Arena2D
 
 
 class RRTPlanner:
-    def __init__(self, initial_state: np.array, goal_state: np.array, arena: Arena2D):
+    def __init__(self, initial_state: np.array, goal_state: np.array, num_obstacles: int, max_obstacle_radius: float):
         """
         Create an RRT planner with a given initial state, a desired goal state, and an arena
         (potentially with obstacles).
         """
-        assert arena.x_min <= initial_state[0] <= arena.x_max
-        assert arena.y_min <= initial_state[1] <= arena.y_max
-        assert arena.x_min <= goal_state[0] <= arena.x_max
-        assert arena.y_min <= goal_state[1] <= arena.y_max
+        self.arena = Arena2D()
+        self.arena.populate_with_random_obstacles(num_obstacles, max_obstacle_radius)
 
-        self.arena = arena
-
-        self.initial_state = initial_state
-        self.goal_state = goal_state
+        self.initial_state = self.arena.populate_state(initial_state)
+        self.goal_state = self.arena.populate_state(goal_state)
 
         self.vertices = [initial_state]
         self.edges = []
@@ -76,6 +72,7 @@ class RRTPlanner:
             i += 1
 
     def plot(self, fig, ax):
+        self.arena.plot(fig, ax)
         ax.scatter([vertex[0] for vertex in self.vertices], [vertex[1] for vertex in self.vertices], c='r', s=5)
         for edge in self.edges:
             plt.plot([edge[0], edge[2]], [edge[1], edge[3]], c='b')
