@@ -52,9 +52,9 @@ class ConvexObstacle:
 
     def plot(self, fig, ax):
         """Plot an obstacle on to a given figure and axis set."""
-        ax.plot(self.x, self.y, c='b')
+        ax.plot(self.x, self.y, c='k')
         # Need to link the last vertex to the first one to complete the obstacle
-        ax.plot([self.x[-1], self.x[0]], [self.y[-1], self.y[0]], c='b')
+        ax.plot([self.x[-1], self.x[0]], [self.y[-1], self.y[0]], c='k')
         return fig, ax
 
 
