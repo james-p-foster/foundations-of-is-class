@@ -1,25 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-class Arena2D:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.x_min = -width/2
-        self.x_max = width/2
-        self.y_min = -height/2
-        self.y_max = height/2
-
-    def plot(self):
-        fig, ax = plt.subplots()
-        ax.set_xlim((self.x_min, self.x_max))
-        ax.set_ylim((self.y_min, self.y_max))
-        plt.show()
+from arena import Arena2D
 
 
 class RRTPlanner:
-    def __init__(self, initial_state, goal_state, arena: Arena2D):
+    def __init__(self, initial_state: np.array, goal_state: np.array, arena: Arena2D):
+        """
+        Create an RRT planner with a given initial state, a desired goal state, and an arena
+        (potentially with obstacles).
+        """
         assert arena.x_min <= initial_state[0] <= arena.x_max
         assert arena.y_min <= initial_state[1] <= arena.y_max
         assert arena.x_min <= goal_state[0] <= arena.x_max
@@ -35,7 +25,7 @@ class RRTPlanner:
 
         self.maximum_iterations = 2500
         self.maximum_distance_between_vertices = 0.1
-        self.goal_eps = 1e-1
+        self.goal_eps = 1e-3
         self.goal_sample_probability = 0.01
 
     def sample_random_state(self):
@@ -71,7 +61,7 @@ class RRTPlanner:
         self.edges.append(np.concatenate((nearest_vertex, new_vertex)))
         return
 
-    def run_rrt(self):
+    def run(self):
         iter = 0
         terminate = False
         while iter < self.maximum_iterations:
@@ -89,24 +79,16 @@ class RRTPlanner:
             iter += 1
 
 
-width = 10
-height = 10
-arena = Arena2D(width, height)
-# arena.plot()
+initial_state = np.array([0.1, 0.1])
+goal_state = np.array([0.9, 0.9])
 
-initial_state = np.array([0, 0])
-goal_state = np.array([2.5, 2.5])
-
+arena = Arena2D()
 rrt = RRTPlanner(initial_state, goal_state, arena)
-rrt.run_rrt()
+rrt.run()
 vertices = rrt.vertices
-plt.scatter([vertex[0] for vertex in vertices], [vertex[1] for vertex in vertices], c='b', s=0.5)
+plt.scatter([vertex[0] for vertex in vertices], [vertex[1] for vertex in vertices], c='r', s=5)
 edges = rrt.edges
 for edge in edges:
     plt.plot([edge[0], edge[2]], [edge[1], edge[3]], c='b')
+plt.scatter(goal_state[0], goal_state[1], c='g', s=25)
 plt.show()
-
-
-
-
-
