@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 from arena import Arena2D
 
@@ -44,7 +45,7 @@ class RRTPlanner:
             distances[i] = np.linalg.norm(random_state - vertex)
         return np.argmin(distances)
 
-    def create_new_vertex(self, nearest_vertex_index: int, random_state: np.array, maximum_distance_between_vertices: float):
+    def create_new_vertex(self, nearest_vertex_index: np.array, random_state: np.array, maximum_distance_between_vertices: float):
         # Find unit vector for vector between nearest_vertex and random_state
         nearest_vertex = self.vertices[nearest_vertex_index]
         distance = random_state - nearest_vertex
@@ -62,17 +63,21 @@ class RRTPlanner:
 
     def run(self):
         i = 0
-        terminate = False
         while i < self.maximum_iterations:
             random_state = self.sample_random_state()
             nearest_vertex_index = self.find_nearest_vertex_index(random_state)
             self.create_new_vertex(nearest_vertex_index, random_state, self.maximum_distance_between_vertices)
-            # Check distances to goal
-            for vertex in list(self.vertices):
-                if np.linalg.norm(self.goal_state - vertex) < self.goal_eps:
-                    print(f"Success! Number of iterations: {i}")
-                    terminate = True
-                    break
-            if terminate:
+            # To check if the goal has been reached, we only need to check the most recently created vertex, otherwise,
+            # if it was an earlier vertex, we would have exited earlier
+            latest_vertex = self.vertices[-1]
+            if np.linalg.norm(self.goal_state - latest_vertex) < self.goal_eps:
+                print(f"Success! Number of iterations: {i}")
                 break
             i += 1
+
+    def plot(self, fig, ax):
+        ax.scatter([vertex[0] for vertex in self.vertices], [vertex[1] for vertex in self.vertices], c='r', s=5)
+        for edge in self.edges:
+            plt.plot([edge[0], edge[2]], [edge[1], edge[3]], c='b')
+        plt.scatter(self.goal_state[0], self.goal_state[1], c='g', s=25)
+        return fig, ax
