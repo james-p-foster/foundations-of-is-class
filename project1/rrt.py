@@ -38,13 +38,13 @@ class RRTPlanner:
             random_state = np.random.uniform(lower_bound, upper_bound)
         return random_state
 
-    def find_nearest_vertex_index(self, random_state):
+    def find_nearest_vertex_index(self, random_state: np.array):
         distances = np.empty(len(self.vertices))
         for (i, vertex) in enumerate(self.vertices):
             distances[i] = np.linalg.norm(random_state - vertex)
         return np.argmin(distances)
 
-    def create_new_vertex(self, nearest_vertex_index, random_state, maximum_distance_between_vertices):
+    def create_new_vertex(self, nearest_vertex_index: int, random_state: np.array, maximum_distance_between_vertices: float):
         # Find unit vector for vector between nearest_vertex and random_state
         nearest_vertex = self.vertices[nearest_vertex_index]
         distance = random_state - nearest_vertex
