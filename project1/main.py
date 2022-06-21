@@ -54,6 +54,10 @@ print(number_of_failures_array)
 print(average_iterations_array)
 fig, ax = plt.subplots()
 ax.matshow(number_of_failures_array)
+for (i, _) in enumerate(goal_sample_probability_values):
+    for (j, _) in enumerate(max_distance_values):
+        score = number_of_failures_array[j, i]
+        ax.text(i, j, int(score), va='center', ha='center', c='w')
 ax.set_title("Number of failures")
 ax.set_xlabel("goal sample probability")
 ax.set_xticks(np.arange(len(goal_sample_probability_values)))
@@ -64,6 +68,10 @@ ax.set_yticklabels([str(value) for value in max_distance_values])
 plt.show()
 fig, ax = plt.subplots()
 ax.matshow(average_iterations_array)
+for (i, _) in enumerate(goal_sample_probability_values):
+    for (j, _) in enumerate(max_distance_values):
+        score = average_iterations_array[j, i]
+        ax.text(i, j, f"{score:.2f}", va='center', ha='center', c='w')
 ax.set_title("Average iterations")
 ax.set_xlabel("goal sample probability")
 ax.set_xticks(np.arange(len(goal_sample_probability_values)))
