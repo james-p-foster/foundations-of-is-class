@@ -60,6 +60,8 @@ class Arena2D:
         """Plot the arena and its obstacles."""
         ax.set_xlim((self.x_min, self.x_max))
         ax.set_ylim((self.y_min, self.y_max))
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
 
         for obstacle in self.obstacles:
             fig, ax = obstacle.plot(fig, ax)

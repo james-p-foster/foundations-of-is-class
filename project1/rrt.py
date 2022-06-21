@@ -104,6 +104,7 @@ class RRTPlanner:
             if self.plotting and i % 50 == 0:
                 fig, ax = plt.subplots()
                 self.plot(fig, ax)
+                plt.title(f"Iteration {i}")
                 plt.show()
             # First, sample a random state (possibly the goal state thanks to heuristic)
             random_state = self.sample_random_state()
@@ -127,6 +128,7 @@ class RRTPlanner:
                 if self.plotting:
                     fig, ax = plt.subplots()
                     self.plot(fig, ax)
+                    plt.title(f"Iteration {i}")
                     plt.show()
                 break
             i += 1
