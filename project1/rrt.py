@@ -135,8 +135,9 @@ class RRTPlanner:
 
     def plot(self, fig, ax):
         self.arena.plot(fig, ax)
-        ax.scatter([vertex[0] for vertex in self.vertices], [vertex[1] for vertex in self.vertices], c='r', s=5)
         for edge in self.edges:
             plt.plot([edge[0], edge[2]], [edge[1], edge[3]], c='b')
-        plt.scatter(self.goal_state[0], self.goal_state[1], c='g', s=25)
+        plt.scatter(self.initial_state[0], self.initial_state[1], c='r', s=50)
+        plt.scatter(self.goal_state[0], self.goal_state[1], c='g', s=50)
+        ax.scatter([vertex[0] for vertex in self.vertices[1:]], [vertex[1] for vertex in self.vertices[1:]], c='b', s=5)
         return fig, ax
