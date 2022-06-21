@@ -43,8 +43,7 @@ class Arena2D:
         perturbation_standard_deviation = 0
 
         i = 0
-        max_iterations = 10
-        while i < max_iterations:
+        while True:
             # Quicker to check if any is in collision, rather than all not in collision
             collision_boolean_vector = [obstacle.check_collision(initial_state) for obstacle in self.obstacles]
             if not any(collision_boolean_vector):
@@ -53,8 +52,6 @@ class Arena2D:
                 perturbation_standard_deviation += 0.01
                 initial_state = desired_state + np.random.normal(0.0, perturbation_standard_deviation, 2)
                 i += 1
-        print(f"Failed to populate state after {max_iterations} iterations, raising exception")
-        raise Exception("Maximum number of iterations reached for populating state")
 
     def plot(self, fig, ax):
         """Plot the arena and its obstacles."""
