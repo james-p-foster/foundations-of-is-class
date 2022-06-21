@@ -6,7 +6,10 @@ from arena import Arena2D
 
 
 class RRTPlanner:
-    def __init__(self, initial_state: np.array, goal_state: np.array, num_obstacles: int, max_obstacle_radius: float):
+    def __init__(self, initial_state: np.array, goal_state: np.array, num_obstacles: int, max_obstacle_radius: float,
+                 maximum_iterations: int = 1000, maximum_distance_between_vertices: float = 0.1,
+                 collision_checking_resolution: float = 1e-3,
+                 goal_sample_probability: float = 0.01, goal_eps: float = 0.01, plotting: bool = False):
         """
         Create an RRT planner with a given initial state, a desired goal state, and an arena
         (potentially with obstacles).
@@ -20,13 +23,13 @@ class RRTPlanner:
         self.vertices = [self.initial_state]
         self.edges = []
 
-        self.maximum_iterations = 1000
-        self.maximum_distance_between_vertices = 0.1
-        self.collision_checking_resolution = 1e-3
-        self.goal_eps = 1e-2
-        self.goal_sample_probability = 0.01
+        self.maximum_iterations = maximum_iterations
+        self.maximum_distance_between_vertices = maximum_distance_between_vertices
+        self.collision_checking_resolution = collision_checking_resolution
+        self.goal_sample_probability = goal_sample_probability
+        self.goal_eps = goal_eps
 
-        self.plotting = True
+        self.plotting = plotting
 
     def sample_random_state(self):
         """
@@ -99,6 +102,7 @@ class RRTPlanner:
         return list_of_collision_checking_nodes[-1]
 
     def run(self):
+        success = False
         i = 0
         while i < self.maximum_iterations:
             if self.plotting and i % 50 == 0:
@@ -125,6 +129,7 @@ class RRTPlanner:
             # if it was an earlier vertex, we would have exited earlier
             if any([np.linalg.norm(self.goal_state - vertex) < self.goal_eps for vertex in self.vertices]):
                 print(f"Success! Number of iterations: {i}")
+                success = True
                 if self.plotting:
                     fig, ax = plt.subplots()
                     self.plot(fig, ax)
@@ -132,6 +137,7 @@ class RRTPlanner:
                     plt.show()
                 break
             i += 1
+        return success, i
 
     def plot(self, fig, ax):
         self.arena.plot(fig, ax)
