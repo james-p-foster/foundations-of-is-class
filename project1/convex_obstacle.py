@@ -57,7 +57,7 @@ class ConvexObstacle:
         ax.plot([self.x[-1], self.x[0]], [self.y[-1], self.y[0]], c='k')
         return fig, ax
 
-
+# FOR TESTING
 if __name__ == "__main__":
     np.random.seed(45)
 

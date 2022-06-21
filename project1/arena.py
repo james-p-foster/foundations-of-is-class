@@ -46,11 +46,11 @@ class Arena2D:
         max_iterations = 10
         while i < max_iterations:
             # Quicker to check if any is in collision, rather than all not in collision
-            if not any([obstacle.check_collision(desired_state) for obstacle in self.obstacles]):
-                print(f"State set to: {initial_state} after {i} perturbations")
+            collision_boolean_vector = [obstacle.check_collision(initial_state) for obstacle in self.obstacles]
+            if not any(collision_boolean_vector):
                 return initial_state
             else:
-                perturbation_standard_deviation += 0.1
+                perturbation_standard_deviation += 0.01
                 initial_state = desired_state + np.random.normal(0.0, perturbation_standard_deviation, 2)
                 i += 1
         print(f"Failed to populate state after {max_iterations} iterations, raising exception")
@@ -66,6 +66,7 @@ class Arena2D:
         return fig, ax
 
 
+# FOR TESTING
 if __name__ == "__main__":
     # First, create an arena without obstacles (the plot will be empty!)
     arena = Arena2D()
