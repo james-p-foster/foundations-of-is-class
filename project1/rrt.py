@@ -9,7 +9,7 @@ class RRTPlanner:
     def __init__(self, initial_state: np.array, goal_state: np.array, num_obstacles: int, max_obstacle_radius: float,
                  maximum_iterations: int = 1000, maximum_distance_between_vertices: float = 0.1,
                  collision_checking_resolution: float = 1e-3,
-                 goal_sample_probability: float = 0.01, goal_eps: float = 0.01, plotting: bool = False):
+                 goal_sample_probability: float = 0.01, goal_eps: float = 1e-2, plotting: bool = False):
         """
         Create an RRT planner with a given initial state, a desired goal state, and an arena
         (potentially with obstacles).
