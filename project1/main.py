@@ -36,27 +36,32 @@ def run_multiple_flytrap_rrt(initial_state, goal_state, number_of_runs, gap_size
                                       [0.8, 0.8],
                                       [0.8, 0.7],
                                       [0.2, 0.7]])
-    upper_border = ConvexObstacle(upper_border_vertices)
+    upper_border = ConvexObstacle(np.zeros(2), 3, 1)  # Provide dummy obstacle that we will overwrite
+    upper_border.overwrite_vertices(upper_border_vertices)
     left_border_vertices = np.array([[0.2, 0.8],
                                      [0.3, 0.8],
                                      [0.3, 0.2],
                                      [0.2, 0.2]])
-    left_border = ConvexObstacle(left_border_vertices)
+    left_border = ConvexObstacle(np.zeros(2), 3, 1)
+    left_border.overwrite_vertices(left_border_vertices)
     bottom_border_vertices = np.array([[0.2, 0.3],
                                        [0.8, 0.3],
                                        [0.8, 0.2],
                                        [0.2, 0.2]])
-    bottom_border = ConvexObstacle(bottom_border_vertices)
+    bottom_border = ConvexObstacle(np.zeros(2), 3, 1)
+    bottom_border.overwrite_vertices(bottom_border_vertices)
     right_border_above_vertices = np.array([[0.7, 0.8],
                                             [0.8, 0.8],
                                             [0.8, 0.5 + gap_size / 2],
                                             [0.7, 0.5 + gap_size / 2]])
-    right_border_above = ConvexObstacle(right_border_above_vertices)
+    right_border_above = ConvexObstacle(np.zeros(2), 3, 1)
+    right_border_above.overwrite_vertices(right_border_above_vertices)
     right_border_below_vertices = np.array([[0.7, 0.5 - gap_size / 2],
                                             [0.8, 0.5 - gap_size / 2],
                                             [0.8, 0.2],
                                             [0.7, 0.2]])
-    right_border_below = ConvexObstacle(right_border_below_vertices)
+    right_border_below = ConvexObstacle(np.zeros(2), 3, 1)
+    right_border_below.overwrite_vertices(right_border_below_vertices)
     arena = Arena2D()
     arena.obstacles = [upper_border, left_border, bottom_border, right_border_above, right_border_below]
 
@@ -279,4 +284,16 @@ def visualise_unconstrained_examples():
         rrt.run()
 
 
-visualise_unconstrained_examples()
+# Constrained:
+def visualise_constrained_examples():
+    initial_state = np.array([0.1, 0.1])
+    goal_state = np.array([0.9, 0.9])
+
+    number_of_obstacles = [5, 25]
+    max_obstacle_radius = [0.01, 0.1]
+    for i in range(2):
+        rrt = RRTPlanner(initial_state, goal_state, number_of_obstacles[i], max_obstacle_radius[i], plotting=True)
+        rrt.run()
+
+
+visualise_constrained_examples()
