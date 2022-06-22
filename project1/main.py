@@ -31,7 +31,7 @@ def run_multiple_constrained_rrt(initial_state, goal_state, number_of_runs, numb
     return success_array, iterations_array
 
 
-def run_multiple_flytrap_rrt(initial_state, goal_state, number_of_runs, gap_size):
+def create_flytrap_arena(gap_size):
     upper_border_vertices = np.array([[0.2, 0.8],
                                       [0.8, 0.8],
                                       [0.8, 0.7],
@@ -64,11 +64,16 @@ def run_multiple_flytrap_rrt(initial_state, goal_state, number_of_runs, gap_size
     right_border_below.overwrite_vertices(right_border_below_vertices)
     arena = Arena2D()
     arena.obstacles = [upper_border, left_border, bottom_border, right_border_above, right_border_below]
+    return arena
+
+
+def run_multiple_flytrap_rrt(initial_state, goal_state, number_of_runs, gap_size):
+    flytrap_arena = create_flytrap_arena(gap_size)
 
     success_array = np.zeros(number_of_runs, dtype=bool)
     iterations_array = np.zeros(number_of_runs)
     for i in range(number_of_runs):
-        rrt = RRTPlanner(initial_state, goal_state, 0, 0, arena=arena)
+        rrt = RRTPlanner(initial_state, goal_state, 0, 0, arena=flytrap_arena)
         success, iterations = rrt.run()
         success_array[i] = success
         iterations_array[i] = iterations
@@ -296,4 +301,16 @@ def visualise_constrained_examples():
         rrt.run()
 
 
-visualise_constrained_examples()
+# Flytrap:
+def visualise_flytrap_examples():
+    initial_state = np.array([0.5, 0.5])
+    goal_state = np.array([0.1, 0.5])
+
+    gap_size = [0.02, 0.1]
+    for i in range(2):
+        flytrap_arena = create_flytrap_arena(gap_size[i])
+        rrt = RRTPlanner(initial_state, goal_state, 0, 0, arena=flytrap_arena, plotting=True)
+        rrt.run()
+
+
+visualise_flytrap_examples()
