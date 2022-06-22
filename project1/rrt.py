@@ -109,7 +109,7 @@ class RRTPlanner:
         success = False
         i = 0
         while i < self.maximum_iterations:
-            if self.plotting and i % 50 == 0:
+            if self.plotting and i % 20 == 0:
                 fig, ax = plt.subplots()
                 self.plot(fig, ax)
                 plt.title(f"Iteration {i}")
