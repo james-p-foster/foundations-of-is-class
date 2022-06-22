@@ -312,5 +312,9 @@ def visualise_flytrap_examples():
         rrt = RRTPlanner(initial_state, goal_state, 0, 0, arena=flytrap_arena, plotting=True)
         rrt.run()
 
-
+unconstrained_experiments()
+constrained_experiments()
+adversarial_experiments()
+visualise_unconstrained_examples()
+visualise_constrained_examples()
 visualise_flytrap_examples()
