@@ -31,10 +31,10 @@ class ConvexObstacle:
 
         self.location = location
 
-    def __init__(self, vertices: np.array):
+    def overwrite_vertices(self, vertices: np.array):
         """
-        Create an obstacle from a set of vertices. It is assumed that the user provides vertices that result in a
-        convex polygon.
+        Modify an existing (possibly trivial) obstacle to contain a provided set of vertices. It is assumed that the
+        user provides vertices that result in a convex polygon.
 
         It is assumed that the vertices are supplied as a (num_vertices, 2) shaped numpy array, with x components in the
         first column and y components in the second column.
