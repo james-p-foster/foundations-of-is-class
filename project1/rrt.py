@@ -15,7 +15,7 @@ class RRTPlanner:
         Create an RRT planner with a given initial state, a desired goal state, and an arena
         (potentially with obstacles).
         """
-        if arena == None:
+        if arena is None:
             self.arena = Arena2D()
             self.arena.populate_with_random_obstacles(num_obstacles, max_obstacle_radius)
         else:
