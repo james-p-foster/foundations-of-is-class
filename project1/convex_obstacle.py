@@ -31,6 +31,21 @@ class ConvexObstacle:
 
         self.location = location
 
+    def __init__(self, vertices: np.array):
+        """
+        Create an obstacle from a set of vertices. It is assumed that the user provides vertices that result in a
+        convex polygon.
+
+        It is assumed that the vertices are supplied as a (num_vertices, 2) shaped numpy array, with x components in the
+        first column and y components in the second column.
+        """
+        assert vertices.shape[1] == 2
+
+        self.x = vertices[:, 0]
+        self.y = vertices[:, 1]
+
+        self.number_of_vertices = vertices.shape[0]
+
     def check_collision(self, point: np.array):
         """
         Check if point is inside (and thus colliding) this obstacle.
