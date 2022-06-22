@@ -139,6 +139,7 @@ def unconstrained_experiments():
     ax.set_yticklabels([str(value) for value in max_distance_values])
     plt.show()
 
+
 # Second set of experiments: RRT with obstacles.
 # Vary number of obstacles and their maximum radius to see the effect:
 #   * number of obstacles (5, 10, 15, 20, 25)
@@ -207,6 +208,7 @@ def constrained_experiments():
     ax.set_yticklabels([str(value) for value in number_of_obstacles_values])
     plt.show()
 
+
 # Third set of experiments: adversarial environments.
 # Create a flytrap environment where the initial state is inside a box, with a thin escape corridor to the outside of
 # the box, where the goal state is located. Vary the size of the escape corridor:
@@ -259,3 +261,22 @@ def adversarial_experiments():
     ax.set_xlabel("gap size")
     ax.set_ylabel("average iterations")
     plt.show()
+
+
+# Finally, visualise some examples from the various experiments.
+# Unconstrained:
+def visualise_unconstrained_examples():
+    initial_state = np.array([0.1, 0.1])
+    goal_state = np.array([0.9, 0.9])
+
+    maximum_distance_between_vertices = [0.1, 0.5]
+    goal_sample_probability = [0.01, 0.1]
+    for i in range(2):
+        rrt = RRTPlanner(initial_state, goal_state, 0, 0,
+                         maximum_distance_between_vertices=maximum_distance_between_vertices[i],
+                         goal_sample_probability=goal_sample_probability[i],
+                         plotting=True)
+        rrt.run()
+
+
+visualise_unconstrained_examples()
