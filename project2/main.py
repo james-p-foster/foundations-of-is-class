@@ -58,20 +58,50 @@ number_of_simulation_steps = int((end_time - start_time) / time_step)
 number_of_boxes = 10
 boxes = create_list_of_boxes(number_of_boxes)
 
+# Find joint angles need for collision with first box, and use them set the arm to be in collision
+box_position = pybullet.getBasePositionAndOrientation(boxes[0])[0]  # check pybullet docs for getBasePositionAndOrientation(), [] returns the position from the tuple
+print(box_position)
+number_of_joints = pybullet.getNumJoints(kuka)
+desired_joint_configuration_for_collision = pybullet.calculateInverseKinematics(kuka, number_of_joints-1, list(box_position))  # -1 because of 0 indexing
+for joint in range(number_of_joints):
+    pybullet.resetJointState(kuka, joint, desired_joint_configuration_for_collision[joint])
+pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
+
+
+# Find collisions
+def check_collision_with_boxes(robot, boxes):
+    collision_with_boxes = []
+    for box in range(number_of_boxes):
+        collision_data = pybullet.getContactPoints(robot, boxes[box])
+        if len(collision_data) == 0:  # empty tuple, no collision
+            collision_with_boxes.append(False)
+        else:
+            collision_with_boxes.append(True)
+    return collision_with_boxes
+
+
+# TODO: project questions
+#   * do both joint space and task space RRT? Joint space will be 7 dof, task space will be 3 dof but will need inverse kinematics
+#   * when calculating the nearest vertex in RRT to find what vertex to link to, what is a good distance metric in joint space? 2 norm, 1 norm, inf norm?
+#   * will probably need some angle wrapping capability, e.g. -pi/2 and +pi/2 are actually the same angle
+#   * two seperate sims? One for visualising the result and the other for collision checking? Check GUI and DIRECT server options
+
 for t in range(number_of_simulation_steps):
     print(f"Simulation step: {t} of {number_of_simulation_steps}")
     # # Can either step the simulation (nots sure we need to do this, as only using kinematics)
-    # pybullet.stepSimulation()
-    # time.sleep(time_step)
+    pybullet.stepSimulation()
+    collisions = check_collision_with_boxes(kuka, boxes)
+    print(collisions)
+    time.sleep(time_step)
     # # Or can just sleep
     # time.sleep(5)
 
     # Sample random joint configurations
-    random_joint_configuration = sample_random_joint_configuration(kuka)
-    number_of_joints = pybullet.getNumJoints(kuka)
-    for joint in range(number_of_joints):
-        pybullet.resetJointState(kuka, joint, random_joint_configuration[joint])
-    time.sleep(0.5)
+    # random_joint_configuration = sample_random_joint_configuration(kuka)
+    # number_of_joints = pybullet.getNumJoints(kuka)
+    # for joint in range(number_of_joints):
+    #     pybullet.resetJointState(kuka, joint, random_joint_configuration[joint])
+    # time.sleep(0.5)
 
 # End
 pybullet.disconnect()
