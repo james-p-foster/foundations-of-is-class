@@ -15,8 +15,24 @@ pybullet.resetDebugVisualizerCamera(cameraDistance=1.400, cameraYaw=58.000, came
 
 kuka = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
 plane = pybullet.loadURDF("plane.urdf")
-box1 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[1, 1, 0.5], useFixedBase=True)
-box2 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[2, 0, 1.0], useFixedBase=True)
+# box1 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[1, 1, 0.5], useFixedBase=True)
+# box2 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[2, 0, 1.0], useFixedBase=True)
+
+
+def create_list_of_boxes(number_of_boxes):
+    boxes = []
+    for i in range(number_of_boxes):
+        # Randomly sample a position for the box
+        x_limits = (-1.0, 1.0)
+        y_limits = (-1.0, 1.0)
+        z_limits = (0, 1)  # don't want the box underground
+        x = np.random.uniform(x_limits[0], x_limits[1])
+        y = np.random.uniform(y_limits[0], y_limits[1])
+        z = np.random.uniform(z_limits[0], z_limits[1])
+        box = pybullet.loadURDF("assets/box/box.urdf", basePosition=[x, y, z], useFixedBase=True)
+        boxes.append(box)
+    return boxes
+
 
 def sample_random_joint_configuration(robot):
     number_of_joints = pybullet.getNumJoints(robot)
@@ -38,6 +54,10 @@ end_time = 10.0
 time_step = 0.01
 number_of_simulation_steps = int((end_time - start_time) / time_step)
 
+# Populate simulation with randomly positioned boxes
+number_of_boxes = 10
+boxes = create_list_of_boxes(number_of_boxes)
+
 for t in range(number_of_simulation_steps):
     print(f"Simulation step: {t} of {number_of_simulation_steps}")
     # # Can either step the simulation (nots sure we need to do this, as only using kinematics)
@@ -45,6 +65,8 @@ for t in range(number_of_simulation_steps):
     # time.sleep(time_step)
     # # Or can just sleep
     # time.sleep(5)
+
+    # Sample random joint configurations
     random_joint_configuration = sample_random_joint_configuration(kuka)
     number_of_joints = pybullet.getNumJoints(kuka)
     for joint in range(number_of_joints):
