@@ -3,21 +3,6 @@ import pybullet_data
 import time
 import numpy as np
 
-# Set up pybullet instance
-physicsClient = pybullet.connect(pybullet.GUI)
-pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
-pybullet.setPhysicsEngineParameter(enableFileCaching=0)
-pybullet.setGravity(0, 0, -9.8)
-pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, False)
-pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_SHADOWS, True)
-pybullet.resetDebugVisualizerCamera(cameraDistance=1.400, cameraYaw=58.000, cameraPitch=-42.200,
-                                    cameraTargetPosition=(0.0, 0.0, 0.0))
-
-kuka = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
-plane = pybullet.loadURDF("plane.urdf")
-# box1 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[1, 1, 0.5], useFixedBase=True)
-# box2 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[2, 0, 1.0], useFixedBase=True)
-
 
 def create_list_of_boxes(number_of_boxes):
     boxes = []
@@ -49,6 +34,32 @@ def sample_random_joint_configuration(robot):
         random_joint_configuration.append(position)
     return random_joint_configuration
 
+
+def check_collision_with_boxes(robot, boxes):
+    collision_with_boxes = []
+    for box in range(number_of_boxes):
+        collision_data = pybullet.getContactPoints(robot, boxes[box])
+        if len(collision_data) == 0:  # empty tuple, no collision
+            collision_with_boxes.append(False)
+        else:
+            collision_with_boxes.append(True)
+    return collision_with_boxes
+
+
+# Set up pybullet instance
+physicsClient = pybullet.connect(pybullet.GUI)
+pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
+pybullet.setPhysicsEngineParameter(enableFileCaching=0)
+pybullet.setGravity(0, 0, -9.8)
+pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, False)
+pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_SHADOWS, True)
+pybullet.resetDebugVisualizerCamera(cameraDistance=1.400, cameraYaw=58.000, cameraPitch=-42.200,
+                                    cameraTargetPosition=(0.0, 0.0, 0.0))
+kuka = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
+plane = pybullet.loadURDF("plane.urdf")
+# box1 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[1, 1, 0.5], useFixedBase=True)
+# box2 = pybullet.loadURDF("assets/box/box.urdf", basePosition=[2, 0, 1.0], useFixedBase=True)
+
 start_time = 0.0
 end_time = 10.0
 time_step = 0.01
@@ -67,24 +78,13 @@ for joint in range(number_of_joints):
     pybullet.resetJointState(kuka, joint, desired_joint_configuration_for_collision[joint])
 pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
 
-
-# Find collisions
-def check_collision_with_boxes(robot, boxes):
-    collision_with_boxes = []
-    for box in range(number_of_boxes):
-        collision_data = pybullet.getContactPoints(robot, boxes[box])
-        if len(collision_data) == 0:  # empty tuple, no collision
-            collision_with_boxes.append(False)
-        else:
-            collision_with_boxes.append(True)
-    return collision_with_boxes
-
-
 # TODO: project questions
 #   * do both joint space and task space RRT? Joint space will be 7 dof, task space will be 3 dof but will need inverse kinematics
 #   * when calculating the nearest vertex in RRT to find what vertex to link to, what is a good distance metric in joint space? 2 norm, 1 norm, inf norm?
 #   * will probably need some angle wrapping capability, e.g. -pi/2 and +pi/2 are actually the same angle
 #   * two seperate sims? One for visualising the result and the other for collision checking? Check GUI and DIRECT server options
+#   * when making RRT classes (both task space and joint space), be sure to create a list denoting the parent of each node that is added to the RRT graph -- this will et you easily backtrack from the goal to form a path
+#   * do smoothing on the RRT result? Draw a ray between consecutive nodes on the goal path, see if it is collision-free. If it is, by the definition of the triangle inequality it is shortwer, so replace it as the path (only works with task space RRT where collision checking is easy?)
 
 for t in range(number_of_simulation_steps):
     print(f"Simulation step: {t} of {number_of_simulation_steps}")
