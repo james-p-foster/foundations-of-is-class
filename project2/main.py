@@ -46,6 +46,20 @@ def check_collision_with_boxes(robot, boxes):
     return collision_with_boxes
 
 
+def create_goal():
+    # TODO: copied from the create_boxes() function, probably want the smae limits shared between the two! Think about
+    #   this when you put these functions in a class
+    x_limits = (-1.0, 1.0)
+    y_limits = (-1.0, 1.0)
+    z_limits = (0, 1)  # don't want the box underground
+    x = np.random.uniform(x_limits[0], x_limits[1])
+    y = np.random.uniform(y_limits[0], y_limits[1])
+    z = np.random.uniform(z_limits[0], z_limits[1])
+    visual = pybullet.createVisualShape(pybullet.GEOM_SPHERE, radius=0.05, rgbaColor=[0, 1, 0, 1])
+    marker = pybullet.createMultiBody(basePosition=[x, y, z], baseCollisionShapeIndex=-1, baseVisualShapeIndex=visual)
+    return marker
+
+
 # Set up pybullet instance
 physicsClient = pybullet.connect(pybullet.GUI)
 pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -77,6 +91,9 @@ desired_joint_configuration_for_collision = pybullet.calculateInverseKinematics(
 for joint in range(number_of_joints):
     pybullet.resetJointState(kuka, joint, desired_joint_configuration_for_collision[joint])
 pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
+
+# Create goal marker
+create_goal()
 
 # TODO: project questions
 #   * do both joint space and task space RRT? Joint space will be 7 dof, task space will be 3 dof but will need inverse kinematics
