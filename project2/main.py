@@ -46,6 +46,22 @@ def check_collision_with_boxes(robot, boxes):
     return collision_with_boxes
 
 
+def check_collision_with_ground(robot, plane):
+    collision_data = pybullet.getContactPoints(robot, plane)
+    if len(collision_data) == 0:  # empty tuple, no collision
+        return False
+    else:
+        return True
+
+
+def check_collision_with_self(robot):
+    collision_data = pybullet.getContactPoints(robot, robot)
+    if len(collision_data) == 0:  # empty tuple, no collision
+        return False
+    else:
+        return True
+
+
 def create_goal():
     # TODO: copied from the create_boxes() function, probably want the smae limits shared between the two! Think about
     #   this when you put these functions in a class
@@ -90,7 +106,7 @@ number_of_joints = pybullet.getNumJoints(kuka)
 desired_joint_configuration_for_collision = pybullet.calculateInverseKinematics(kuka, number_of_joints-1, list(box_position))  # -1 because of 0 indexing
 for joint in range(number_of_joints):
     pybullet.resetJointState(kuka, joint, desired_joint_configuration_for_collision[joint])
-pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
+# pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
 
 # Create goal marker
 create_goal()
@@ -107,8 +123,12 @@ for t in range(number_of_simulation_steps):
     print(f"Simulation step: {t} of {number_of_simulation_steps}")
     # # Can either step the simulation (nots sure we need to do this, as only using kinematics)
     pybullet.stepSimulation()
-    collisions = check_collision_with_boxes(kuka, boxes)
-    print(collisions)
+    box_collisions = check_collision_with_boxes(kuka, boxes)
+    print(f"Collision with boxes: {box_collisions}")
+    ground_collisions = check_collision_with_ground(kuka, plane)
+    print(f"Collision with ground: {ground_collisions}")
+    self_collisions = check_collision_with_self(kuka)
+    print(f"Collision with self: {self_collisions}")
     time.sleep(time_step)
     # # Or can just sleep
     # time.sleep(5)
@@ -118,7 +138,7 @@ for t in range(number_of_simulation_steps):
     # number_of_joints = pybullet.getNumJoints(kuka)
     # for joint in range(number_of_joints):
     #     pybullet.resetJointState(kuka, joint, random_joint_configuration[joint])
-    # time.sleep(0.5)
+    # time.sleep(0.1)
 
 # End
 pybullet.disconnect()
