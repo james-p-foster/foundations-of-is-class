@@ -75,6 +75,10 @@ def create_goal():
     marker = pybullet.createMultiBody(basePosition=[x, y, z], baseCollisionShapeIndex=-1, baseVisualShapeIndex=visual)
     return marker
 
+def get_goal_location(goal_id):
+    goal_location = list(pybullet.getBasePositionAndOrientation(goal_id)[0])
+    return goal_location
+
 
 # Set up pybullet instance
 physicsClient = pybullet.connect(pybullet.GUI)
@@ -109,7 +113,9 @@ for joint in range(number_of_joints):
 # pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
 
 # Create goal marker
-create_goal()
+goal = create_goal()
+goal_location = get_goal_location(goal)
+print(f"Goal location: {goal_location}")
 
 # TODO: project questions
 #   * do both joint space and task space RRT? Joint space will be 7 dof, task space will be 3 dof but will need inverse kinematics
