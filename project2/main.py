@@ -118,6 +118,7 @@ create_goal()
 #   * two seperate sims? One for visualising the result and the other for collision checking? Check GUI and DIRECT server options
 #   * when making RRT classes (both task space and joint space), be sure to create a list denoting the parent of each node that is added to the RRT graph -- this will et you easily backtrack from the goal to form a path
 #   * do smoothing on the RRT result? Draw a ray between consecutive nodes on the goal path, see if it is collision-free. If it is, by the definition of the triangle inequality it is shortwer, so replace it as the path (only works with task space RRT where collision checking is easy?)
+#   * how to do collision checking in a joint space RRT? Impossible directly -- will need to do forward kinematics each time and do a collision check, interesting to check how this goes vs. the inverse kinematics required for task space rrt
 
 for t in range(number_of_simulation_steps):
     print(f"Simulation step: {t} of {number_of_simulation_steps}")
