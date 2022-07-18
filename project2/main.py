@@ -255,6 +255,7 @@ for i in range(max_iterations):
             is_finished = True
             break
         j += 1
+        # TODO: need to do distance thresholding!!!!!!!!!!!!!
         # TODO: use debug lines to plot how the RRT expands in task space, even though it searches in joint space!
 
 
