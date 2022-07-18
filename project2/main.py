@@ -21,18 +21,15 @@ def create_list_of_boxes(number_of_boxes):
 
 def sample_random_joint_configuration(robot):
     number_of_joints = pybullet.getNumJoints(robot)
-    print(f"Number of joints: {number_of_joints}")
     random_joint_configuration = []
     for joint in range(number_of_joints):
         # Find upper and lower limits of the joint under consideration
         lower_limit = pybullet.getJointInfo(robot, joint)[8]  # check pybullet docs for getJointInfo(), [8] returns the lower limit from the list
         upper_limit = pybullet.getJointInfo(robot, joint)[9]  # check pybullet docs for getJointInfo(), [9] returns the upper limit from the list
-        print(f"(Lower, Upper) limits of joint {joint}: ({lower_limit}, {upper_limit})")
         # Now, randomly sample a joint position within those limits
         position = np.random.uniform(lower_limit, upper_limit)
-        print(position)
         random_joint_configuration.append(position)
-    return random_joint_configuration
+    return np.array(random_joint_configuration)
 
 
 def check_collision_with_boxes(robot, boxes):
@@ -76,7 +73,7 @@ def create_goal():
     return marker
 
 def get_goal_location(goal_id):
-    goal_location = list(pybullet.getBasePositionAndOrientation(goal_id)[0])
+    goal_location = np.array(pybullet.getBasePositionAndOrientation(goal_id)[0])
     return goal_location
 
 
@@ -107,7 +104,7 @@ boxes = create_list_of_boxes(number_of_boxes)
 box_position = pybullet.getBasePositionAndOrientation(boxes[0])[0]  # check pybullet docs for getBasePositionAndOrientation(), [] returns the position from the tuple
 print(box_position)
 number_of_joints = pybullet.getNumJoints(kuka)
-desired_joint_configuration_for_collision = pybullet.calculateInverseKinematics(kuka, number_of_joints-1, list(box_position))  # -1 because of 0 indexing
+desired_joint_configuration_for_collision = pybullet.calculateInverseKinematics(kuka, number_of_joints-1, np.array(box_position))  # -1 because of 0 indexing
 for joint in range(number_of_joints):
     pybullet.resetJointState(kuka, joint, desired_joint_configuration_for_collision[joint])
 # pybullet.setJointMotorControlArray(kuka, list(range(number_of_joints)), pybullet.POSITION_CONTROL, desired_joint_configuration_for_collision)
@@ -116,6 +113,76 @@ for joint in range(number_of_joints):
 goal = create_goal()
 goal_location = get_goal_location(goal)
 print(f"Goal location: {goal_location}")
+
+# Start joint configuration
+start_joint_configuration = np.array([0, 0, 0, 0, 0, 0, 0])
+
+vertices = [start_joint_configuration]
+edges = []
+parent_vertex_indices = []
+
+# main rrt loop
+max_iterations = 100
+goal_sample_probability = 0.1  # TODO: make this parameter
+goal_joint_configuration = np.array(pybullet.calculateInverseKinematics(kuka, number_of_joints-1, goal_location))
+for i in range(max_iterations):
+    # Sample new joint state or sample goal joint configuration (found via IK)
+    valid_joint_configuration_found = False
+    while valid_joint_configuration_found is False:
+        if np.random.uniform() < 0.1:
+            sampled_joint_state = goal_joint_configuration
+            print(f"GOAL STATE: {sampled_joint_state}")
+        else:
+            sampled_joint_state = sample_random_joint_configuration(kuka)
+            print(f"RANDOM STATE: {sampled_joint_state}")
+
+        # Collision checking
+        for joint in range(number_of_joints):
+            pybullet.resetJointState(kuka, joint, sampled_joint_state[joint])
+        pybullet.stepSimulation()
+        ground_collision = check_collision_with_ground(kuka, plane)
+        self_collision = check_collision_with_self(kuka)
+        box_collision = any(check_collision_with_boxes(kuka, boxes))
+        if any([ground_collision, self_collision, box_collision]):
+            # TODO: possibly add number of rejections counter for plotting?
+            continue
+        else:
+            valid_joint_configuration_found = True
+            print("FOUND VALID JOINT CONFIGURATION!")
+
+    # Distance checking -- find nearest vertex in graph DO DIFFERENT NORMS
+    # TODO: NEED TO CONSIDER CIRCULAR DISTANCES HERE! WRAP THE ANGLES!
+    def angular_difference(angle_array1, angle_array2):
+        assert angle_array1.shape == angle_array2.shape
+
+        length = angle_array1.shape[0]
+        difference = np.zeros(length)
+        for i, (angle1, angle2) in enumerate(zip(angle_array1, angle_array2)):
+            if np.abs(angle1) + np.abs(angle2) > np.pi:
+                difference[i] = 2*np.pi - angle1 - angle2
+            else:
+                difference[i] = angle2 - angle1
+            return difference
+
+    distances = np.zeros(len(vertices))
+    norm_type = 2
+    # norm_type = 1
+    # norm_type = np.inf
+    for i, vertex in enumerate(vertices):
+        distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
+    nearest_vertex_index = np.argmin(distances)
+
+
+
+    # Now it's verified to be collision free add parent vertex information and add to RRT graph
+    parent_vertex_indices.append(nearest_vertex_index)
+    vertices.append(sampled_joint_state)
+
+    # Check if within tolerance of goal
+    if np.linalg.norm(sampled_joint_state - goal_joint_configuration) < 1e-2:  # TODO: magic number
+        print("DONE!")
+
+
 
 # TODO: project questions
 #   * do both joint space and task space RRT? Joint space will be 7 dof, task space will be 3 dof but will need inverse kinematics
