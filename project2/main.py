@@ -1,27 +1,8 @@
 import pybullet
-import pybullet_data
 import time
 import numpy as np
 
-
-def create_boxes(number_of_boxes):
-    boxes = []
-    for i in range(number_of_boxes):
-        # Randomly sample a position for the box
-        x_limits = (-1.0, 1.0)
-        y_limits = (-1.0, 1.0)
-        z_limits = (0, 1)  # don't want the box underground
-        x = np.random.uniform(x_limits[0], x_limits[1])
-        y = np.random.uniform(y_limits[0], y_limits[1])
-        z = np.random.uniform(z_limits[0], z_limits[1])
-        box = pybullet.loadURDF("assets/box/box.urdf", basePosition=[x, y, z], useFixedBase=True)
-        boxes.append(box)
-    return boxes
-
-
-def remove_boxes(boxes):
-    for box in boxes:
-        pybullet.removeBody(box)
+from arena import Arena
 
 
 def sample_random_joint_configuration(robot):
@@ -35,78 +16,6 @@ def sample_random_joint_configuration(robot):
         position = np.random.uniform(lower_limit, upper_limit)
         random_joint_configuration.append(position)
     return np.array(random_joint_configuration)
-
-
-def check_collision_with_boxes(robot, boxes):
-    collision_with_boxes = []
-    for box in range(number_of_boxes):
-        collision_data = pybullet.getContactPoints(robot, boxes[box])
-        if len(collision_data) == 0:  # empty tuple, no collision
-            collision_with_boxes.append(False)
-        else:
-            collision_with_boxes.append(True)
-    return collision_with_boxes
-
-
-def check_collision_with_ground(robot, plane):
-    collision_data = pybullet.getContactPoints(robot, plane)
-    if len(collision_data) == 0:  # empty tuple, no collision
-        return False
-    else:
-        return True
-
-
-def check_collision_with_self(robot):
-    collision_data = pybullet.getContactPoints(robot, robot)
-    if len(collision_data) == 0:  # empty tuple, no collision
-        return False
-    else:
-        return True
-
-
-def check_collisions(robot, plane, boxes):
-    is_self_collision = check_collision_with_self(robot)
-    is_ground_collision = check_collision_with_ground(robot, plane)
-    is_box_collision = any(check_collision_with_boxes(robot, boxes))
-    if any([is_self_collision, is_ground_collision, is_box_collision]):
-        return True
-    else:
-        return False
-
-
-def check_if_goal_is_reached_in_task_space(robot, goal_location):
-    eps = 1e-1
-    end_effector_in_world = np.array(pybullet.getLinkState(robot, 6)[0])
-    if np.linalg.norm(end_effector_in_world - goal_location) > eps:
-        return False
-    else:
-        return True
-
-
-def sample_goal_location():
-    x_limits = (-0.5, 0.5)
-    y_limits = (-0.5, 0.5)
-    z_limits = (0, 1)  # don't want the box underground
-    x = np.random.uniform(x_limits[0], x_limits[1])
-    y = np.random.uniform(y_limits[0], y_limits[1])
-    z = np.random.uniform(z_limits[0], z_limits[1])
-    return np.array([x, y, z])
-
-
-def create_goal_marker(position):
-    visual = pybullet.createVisualShape(pybullet.GEOM_SPHERE, radius=0.05, rgbaColor=[0, 1, 0, 1])
-    marker = pybullet.createMultiBody(basePosition=position, baseCollisionShapeIndex=-1, baseVisualShapeIndex=visual)
-    return marker
-
-
-def update_simulation():
-    pybullet.stepSimulation()
-
-
-def set_joint_configuration(robot, joint_configuration):
-    for joint in range(len(joint_configuration)):
-        pybullet.resetJointState(robot, joint, joint_configuration[joint])
-
 
 def angular_difference(angle_array1, angle_array2):
     # TODO: do some explaining of the whole enumerate zip and the maths behind this angular difference
@@ -147,59 +56,22 @@ def draw_task_space_line_with_joint_space_inputs(robot, start_joint_configuratio
     pybullet.addUserDebugLine(end_effector_location_start, end_effector_location_end, colour, thickness)
 
 
-# Set up pybullet instance
-physicsClient = pybullet.connect(pybullet.GUI)
-pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
-pybullet.setPhysicsEngineParameter(enableFileCaching=0)
-pybullet.setGravity(0, 0, -9.8)
-pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, False)
-pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_SHADOWS, True)
-pybullet.resetDebugVisualizerCamera(cameraDistance=1.400, cameraYaw=58.000, cameraPitch=-42.200,
-                                    cameraTargetPosition=(0.0, 0.0, 0.0))
-kuka = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
-plane = pybullet.loadURDF("plane.urdf")
-
-number_of_joints = pybullet.getNumJoints(kuka)
-
-# Start joint configuration
-start_joint_configuration = np.array([0, 0, 0, 0, 0, 0, 0])
-
-# Populate simulation with randomly positioned boxes -- they must not cause collision with the starting configuration
-# of the robot however
+x_limits = (-0.8, 0.8)
+y_limits = (-0.8, 0.8)
+z_limits = (0, 0.8)  # don't want the box underground
 number_of_boxes = 10
-is_box_placement_valid = False
-while not is_box_placement_valid:
-    boxes = create_boxes(number_of_boxes)
-    set_joint_configuration(kuka, start_joint_configuration)
-    update_simulation()
-    # If the box placement causes collisions with the robot's starting configuration, sample a new set of boxes
-    if check_collisions(kuka, plane, boxes):
-        # TODO: possibly add number of rejections counter for plotting?
-        remove_boxes(boxes)
-        continue
-    else:
-        print("FOUND VALID BOX PLACEMENT!")
-        is_box_placement_valid = True
 
-is_goal_location_valid = False
-while not is_goal_location_valid:
-    goal_location = sample_goal_location()
-    goal_joint_configuration = np.array(pybullet.calculateInverseKinematics(kuka, number_of_joints - 1, goal_location))
-    set_joint_configuration(kuka, goal_joint_configuration)
-    # If we can't actually reach the goal, we want to sample again
-    if not check_if_goal_is_reached_in_task_space(kuka, goal_location):
-        continue
-    # Check for collisions
-    update_simulation()
-    if check_collisions(kuka, plane, boxes):
-        # TODO: possibly add number of rejections counter for plotting?
-        continue
-    print("FOUND VALID GOAL LOCATION!")
-    print(f"Goal location: {goal_location}")
-    print(f"Goal joint configuration: {goal_joint_configuration}")
-    goal = create_goal_marker(goal_location)
-    is_goal_location_valid = True
+arena = Arena(number_of_boxes, x_limits, y_limits, z_limits)
+kuka = arena.robot
+plane = arena.plane
 
+# Populate boxes
+arena.populate_with_boxes()
+
+# Populate with goal
+arena.populate_with_goal()
+
+# TODO: WORKING UP TO HERE!!!!!!!!!!!!! PUT BREAKPOINT BELOW
 vertices = [start_joint_configuration]
 edges = []
 parent_vertex_indices = []
@@ -208,7 +80,7 @@ parent_vertex_indices = []
 is_finished = False
 max_rrt_iterations = 20  # TODO: for now, to be upped when doing stat studies
 max_sample_iterations = 100
-goal_sample_probability = 0.05  # TODO: make this parameter
+goal_sample_probability = 0.02  # TODO: make this parameter
 for rrt_iter in range(max_rrt_iterations):
     if is_finished:
         break
