@@ -201,7 +201,6 @@ for rrt_iter in range(max_rrt_iterations):
         break
     print(f"RRT ITERATION: {rrt_iter}")
 
-    # Sample new joint state or sample goal joint configuration (found via IK)
     sampling_iter = 0
     for sampling_iter in range(max_sample_iterations):
         print(f"SAMPLING ITERATION: {sampling_iter}")
@@ -231,6 +230,18 @@ for rrt_iter in range(max_rrt_iterations):
         for i, vertex in enumerate(vertices):
             distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
         nearest_vertex_index = np.argmin(distances)
+        # TODO: play around with a lot of different norm types and thresholds
+        # Distance thresholding
+        threshold_2_norm = 4  # average distance seems to be about 4, set it lower to limit growth more # TODO: should be a parameter
+        # threshold_1_norm = 10
+        # threshold_inf_norm = 1
+        distance_to_nearest_vertex = distances[nearest_vertex_index]
+        if distance_to_nearest_vertex > threshold_2_norm:
+            difference_to_nearest_vertex = angular_difference(sampled_joint_state, vertices[nearest_vertex_index])
+            unit_vector_to_nearest_vertex = difference_to_nearest_vertex / distance_to_nearest_vertex
+            sampled_joint_state = unit_vector_to_nearest_vertex * threshold_2_norm
+            print("THRESHOLD APPLIED TO SAMPLED STATE!")
+            is_threshold_applied = True  # TODO: not used, just for debugging purposes
 
         # We know by assumption that nearest vertex already in RRT graph has no collisions, and we've checked in this
         # iteration that there are no collisions on the sampled joint state, but what about the path in joint space
