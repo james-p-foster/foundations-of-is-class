@@ -137,6 +137,16 @@ def check_for_intermediate_collisions(robot, start_state, end_state, number_of_c
     return False
 
 
+def draw_task_space_line_with_joint_space_inputs(robot, start_joint_configuration, end_joint_configuration, colour, thickness):
+    set_joint_configuration(robot, start_joint_configuration)
+    update_simulation()
+    end_effector_location_start = np.array(pybullet.getLinkState(robot, 6)[0])
+    set_joint_configuration(kuka, end_joint_configuration)
+    update_simulation()
+    end_effector_location_end = np.array(pybullet.getLinkState(robot, 6)[0])
+    pybullet.addUserDebugLine(end_effector_location_start, end_effector_location_end, colour, thickness)
+
+
 # Set up pybullet instance
 physicsClient = pybullet.connect(pybullet.GUI)
 pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -198,7 +208,7 @@ parent_vertex_indices = []
 is_finished = False
 max_rrt_iterations = 20  # TODO: for now, to be upped when doing stat studies
 max_sample_iterations = 100
-goal_sample_probability = 0.1  # TODO: make this parameter
+goal_sample_probability = 0.05  # TODO: make this parameter
 for rrt_iter in range(max_rrt_iterations):
     if is_finished:
         break
@@ -268,14 +278,8 @@ for rrt_iter in range(max_rrt_iterations):
         parent_vertex_indices.append(nearest_vertex_index)
         vertices.append(sampled_joint_state)
 
-        # Add lines in task space showing RRT evolutiion
-        set_joint_configuration(kuka, vertices[nearest_vertex_index])
-        update_simulation()
-        end_effector_location_nearest_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
-        set_joint_configuration(kuka, sampled_joint_state)
-        update_simulation()
-        end_effector_location_sampled_joint_state = np.array(pybullet.getLinkState(kuka, 6)[0])
-        pybullet.addUserDebugLine(end_effector_location_nearest_vertex, end_effector_location_sampled_joint_state, [0, 1, 0], 2)
+        # Add lines in task space showing RRT evolution
+        draw_task_space_line_with_joint_space_inputs(kuka, vertices[nearest_vertex_index], sampled_joint_state, [0, 1, 0], 2)
 
         # Check if within tolerance of goal
         set_joint_configuration(kuka, sampled_joint_state)
@@ -287,37 +291,58 @@ for rrt_iter in range(max_rrt_iterations):
         sampling_iter += 1
 
 if is_finished:
-    # Now RRT is finished, highlight the line in red
-    # Start with final vertex in vertices and workbackwards to start
+    # Now RRT is finished, highlight the line in red. Start with final vertex in vertices and work backwards to start
     vertex_index = len(vertices)-1
     vertex = vertices[vertex_index]
     vertices_backward_from_goal = [vertex]
+    set_joint_configuration(kuka, vertex)
+    update_simulation()
+    end_effector_locations_backward_from_goal = [np.array(pybullet.getLinkState(kuka, 6)[0])]
     is_first_vertex_reached = False
     while not is_first_vertex_reached:
         parent_index = parent_vertex_indices[vertex_index-1]  # -1 because the list of parent indices is always 1 shorter than the list of vertices
         parent_vertex = vertices[parent_index]
-        vertices_backward_from_goal.append(parent_vertex)
-        set_joint_configuration(kuka, vertex)
-        update_simulation()
-        end_effector_location_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
         set_joint_configuration(kuka, parent_vertex)
         update_simulation()
         end_effector_location_parent_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
-
-        pybullet.addUserDebugLine(end_effector_location_vertex, end_effector_location_parent_vertex, [1, 0, 0], 5.0)
+        vertices_backward_from_goal.append(parent_vertex)
+        end_effector_locations_backward_from_goal.append(end_effector_location_parent_vertex)
+        # if not enable_smoothing:
+        draw_task_space_line_with_joint_space_inputs(kuka, parent_vertex, vertex, [1, 0, 0], 5.0)
         vertex_index = parent_index
         vertex = parent_vertex
         if parent_index == 0:
             print("FOUND PATH BACKWARD FROM GOAL VERTEX TO START VERTEX!")
             is_first_vertex_reached = True
 
+    enable_smoothing = True
+    if enable_smoothing and len(end_effector_locations_backward_from_goal) >= 3:  # Must have 3 or more vertices (2 or more path segments) in order to smooth anything
+        # Iterate through end effector locations and clip ones that have no collisions between them
+        is_smoothing_finished = False
+        i = 0
+        while not is_smoothing_finished:
+            ray_data = pybullet.rayTest(end_effector_locations_backward_from_goal[i],
+                                        end_effector_locations_backward_from_goal[i+2])
+            if ray_data[0][0] <= kuka:  # If first return value of ray test is an id smaller than or equal to robot's, we know it's either "hit" itself or is collision-free, so we can smooth
+                # Remove both inner task space location and the joint space vertex it corresponds to
+                end_effector_locations_backward_from_goal.pop(i+1)
+                vertices_backward_from_goal.pop(i+1)
+            else:
+                i += 1
+            # Finally, check if we're at the penultimate (due to indexing) element in the list. If so, we're finished.
+            # Otherwise, increment.
+            if len(end_effector_locations_backward_from_goal) < 2 or i == len(end_effector_locations_backward_from_goal)-2:
+                is_smoothing_finished = True
+
+        # Now we've smoothed the vertices, draw lines
+        for i in range(len(vertices_backward_from_goal)-1):
+            draw_task_space_line_with_joint_space_inputs(kuka,
+                                                        vertices_backward_from_goal[i],
+                                                        vertices_backward_from_goal[i+1],  # it's +1 this time instead of +2 as we've clipped the redundant middle!
+                                                        [0, 0, 1], 10)
+
     # To get the vertices from start to goal, reverse the list
     vertices_to_goal = list(reversed(vertices_backward_from_goal))
-
-    # enable_smoothing = True
-    # if enable_smoothing:
-    #     # Send ray out from task space
-    #     for i in range(vertices_to_goal[:-1]):  # Don't include final vertex as it
 
     # Finally, send vertex targets to sim and use position control to navigate from start to goal
     num_timesteps = 50
@@ -344,6 +369,6 @@ else:
 
 # End
 # Pause for a while so you can observe result
-time.sleep(10)
+time.sleep(5)
 pybullet.disconnect()
 
