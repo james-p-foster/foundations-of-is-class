@@ -123,7 +123,10 @@ def angular_difference(angle_array1, angle_array2):
 
 
 def check_for_intermediate_collisions(robot, start_state, end_state, number_of_collision_checking_nodes):
-    difference = angular_difference(start_state, end_state)
+    # IF USING ANGULAR DIFFERENCE:
+    # difference = angular_difference(start_state, end_state)
+    # NOT:
+    difference = end_state - start_state
     collision_node_increments = difference / number_of_collision_checking_nodes
     for i in range(number_of_collision_checking_nodes):
         collision_checking_node = start_state + (i + 1) * collision_node_increments
@@ -228,7 +231,10 @@ for rrt_iter in range(max_rrt_iterations):
         # norm_type = 1
         # norm_type = np.inf
         for i, vertex in enumerate(vertices):
-            distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
+            # USING ANGULAR DIFFERENCE:
+            # distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
+            # NOT:
+            distances[i] = np.linalg.norm(vertex - sampled_joint_state, norm_type)
         nearest_vertex_index = np.argmin(distances)
         # TODO: play around with a lot of different norm types and thresholds
         # Distance thresholding
@@ -237,7 +243,10 @@ for rrt_iter in range(max_rrt_iterations):
         # threshold_inf_norm = 1
         distance_to_nearest_vertex = distances[nearest_vertex_index]
         if distance_to_nearest_vertex > threshold_2_norm:
-            difference_to_nearest_vertex = angular_difference(sampled_joint_state, vertices[nearest_vertex_index])
+            # USING ANGULAR DIFFERENCE:
+            # difference_to_nearest_vertex = angular_difference(sampled_joint_state, vertices[nearest_vertex_index])
+            # NOT:
+            difference_to_nearest_vertex = vertices[nearest_vertex_index] - sampled_joint_state
             unit_vector_to_nearest_vertex = difference_to_nearest_vertex / distance_to_nearest_vertex
             sampled_joint_state = unit_vector_to_nearest_vertex * threshold_2_norm
             print("THRESHOLD APPLIED TO SAMPLED STATE!")
@@ -259,6 +268,15 @@ for rrt_iter in range(max_rrt_iterations):
         parent_vertex_indices.append(nearest_vertex_index)
         vertices.append(sampled_joint_state)
 
+        # Add lines in task space showing RRT evolutiion
+        set_joint_configuration(kuka, vertices[nearest_vertex_index])
+        update_simulation()
+        end_effector_location_nearest_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
+        set_joint_configuration(kuka, sampled_joint_state)
+        update_simulation()
+        end_effector_location_sampled_joint_state = np.array(pybullet.getLinkState(kuka, 6)[0])
+        pybullet.addUserDebugLine(end_effector_location_nearest_vertex, end_effector_location_sampled_joint_state, [0, 1, 0], 2)
+
         # Check if within tolerance of goal
         set_joint_configuration(kuka, sampled_joint_state)
         if check_if_goal_is_reached_in_task_space(kuka, goal_location):
@@ -267,8 +285,51 @@ for rrt_iter in range(max_rrt_iterations):
             break
 
         sampling_iter += 1
-        # TODO: need to do distance thresholding!!!!!!!!!!!!!
-        # TODO: use debug lines to plot how the RRT expands in task space, even though it searches in joint space!
+
+if is_finished:
+    # Now RRT is finished, highlight the line in red
+    # Start with final vertex in vertices and workbackwards to start
+    vertex_index = len(vertices)-1
+    vertex = vertices[vertex_index]
+    vertices_backward_from_goal = [vertex]
+    is_first_vertex_reached = False
+    while not is_first_vertex_reached:
+        parent_index = parent_vertex_indices[vertex_index-1]  # -1 because the list of parent indices is always 1 shorter than the list of vertices
+        parent_vertex = vertices[parent_index]
+        vertices_backward_from_goal.append(parent_vertex)
+        set_joint_configuration(kuka, vertex)
+        update_simulation()
+        end_effector_location_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
+        set_joint_configuration(kuka, parent_vertex)
+        update_simulation()
+        end_effector_location_parent_vertex = np.array(pybullet.getLinkState(kuka, 6)[0])
+
+        pybullet.addUserDebugLine(end_effector_location_vertex, end_effector_location_parent_vertex, [1, 0, 0], 5.0)
+        vertex_index = parent_index
+        vertex = parent_vertex
+        if parent_index == 0:
+            print("FOUND PATH BACKWARD FROM GOAL VERTEX TO START VERTEX!")
+            is_first_vertex_reached = True
+
+    # To get the vertices from start to goal, reverse the list
+    vertices_to_goal = list(reversed(vertices_backward_from_goal))
+
+    # enable_smoothing = True
+    # if enable_smoothing:
+    #     # Send ray out from task space
+    #     for i in range(vertices_to_goal[:-1]):  # Don't include final vertex as it
+
+    # Finally, send vertex targets to sim and use position control to navigate from start to goal
+    num_timesteps = 50
+    set_joint_configuration(kuka, start_joint_configuration)
+    for vertex in vertices_to_goal:
+        pybullet.setJointMotorControlArray(kuka, range(number_of_joints), pybullet.POSITION_CONTROL, vertex)
+        for timestep in range(num_timesteps):
+            update_simulation()
+            time.sleep(0.02)
+
+else:
+    print("RRT FAILED!")
 
 
 # TODO: project questions
@@ -282,5 +343,7 @@ for rrt_iter in range(max_rrt_iterations):
 
 
 # End
+# Pause for a while so you can observe result
+time.sleep(10)
 pybullet.disconnect()
 
