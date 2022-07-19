@@ -4,7 +4,7 @@ import time
 import numpy as np
 
 
-def create_list_of_boxes(number_of_boxes):
+def create_boxes(number_of_boxes):
     boxes = []
     for i in range(number_of_boxes):
         # Randomly sample a position for the box
@@ -17,6 +17,11 @@ def create_list_of_boxes(number_of_boxes):
         box = pybullet.loadURDF("assets/box/box.urdf", basePosition=[x, y, z], useFixedBase=True)
         boxes.append(box)
     return boxes
+
+
+def remove_boxes(boxes):
+    for box in boxes:
+        pybullet.removeBody(box)
 
 
 def sample_random_joint_configuration(robot):
@@ -59,6 +64,16 @@ def check_collision_with_self(robot):
         return True
 
 
+def check_collisions(robot, plane, boxes):
+    is_self_collision = check_collision_with_self(robot)
+    is_ground_collision = check_collision_with_ground(robot, plane)
+    is_box_collision = any(check_collision_with_boxes(robot, boxes))
+    if any([is_self_collision, is_ground_collision, is_box_collision]):
+        return True
+    else:
+        return False
+
+
 def check_if_goal_is_reached_in_task_space(robot, goal_location):
     eps = 1e-1
     end_effector_in_world = np.array(pybullet.getLinkState(robot, 6)[0])
@@ -84,6 +99,41 @@ def create_goal_marker(position):
     return marker
 
 
+def update_simulation():
+    pybullet.stepSimulation()
+
+
+def set_joint_configuration(robot, joint_configuration):
+    for joint in range(len(joint_configuration)):
+        pybullet.resetJointState(robot, joint, joint_configuration[joint])
+
+
+def angular_difference(angle_array1, angle_array2):
+    # TODO: do some explaining of the whole enumerate zip and the maths behind this angular difference
+    assert angle_array1.shape == angle_array2.shape
+
+    length = angle_array1.shape[0]
+    difference = np.zeros(length)
+    for i, (angle1, angle2) in enumerate(zip(angle_array1, angle_array2)):
+        if np.abs(angle1) + np.abs(angle2) > np.pi:
+            difference[i] = 2*np.pi - angle1 - angle2
+        else:
+            difference[i] = angle2 - angle1
+    return difference
+
+
+def check_for_intermediate_collisions(robot, start_state, end_state, number_of_collision_checking_nodes):
+    difference = angular_difference(start_state, end_state)
+    collision_node_increments = difference / number_of_collision_checking_nodes
+    for i in range(number_of_collision_checking_nodes):
+        collision_checking_node = start_state + (i + 1) * collision_node_increments
+        set_joint_configuration(robot, collision_checking_node)
+        update_simulation()
+        if check_collisions(robot, plane, boxes):
+            return True
+    return False
+
+
 # Set up pybullet instance
 physicsClient = pybullet.connect(pybullet.GUI)
 pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -106,20 +156,13 @@ start_joint_configuration = np.array([0, 0, 0, 0, 0, 0, 0])
 number_of_boxes = 10
 is_box_placement_valid = False
 while not is_box_placement_valid:
-    boxes = create_list_of_boxes(number_of_boxes)
-    # TODO: make below a function
-    for joint in range(number_of_joints):
-        pybullet.resetJointState(kuka, joint, start_joint_configuration[joint])
-    pybullet.stepSimulation()
-    # TODO: make below a function
-    ground_collision = check_collision_with_ground(kuka, plane)
-    self_collision = check_collision_with_self(kuka)
-    box_collision = any(check_collision_with_boxes(kuka, boxes))
-    if any([ground_collision, self_collision, box_collision]):
+    boxes = create_boxes(number_of_boxes)
+    set_joint_configuration(kuka, start_joint_configuration)
+    update_simulation()
+    # If the box placement causes collisions with the robot's starting configuration, sample a new set of boxes
+    if check_collisions(kuka, plane, boxes):
         # TODO: possibly add number of rejections counter for plotting?
-        # TODO: make below a function
-        for box in boxes:
-            pybullet.removeBody(box)
+        remove_boxes(boxes)
         continue
     else:
         print("FOUND VALID BOX PLACEMENT!")
@@ -127,21 +170,15 @@ while not is_box_placement_valid:
 
 is_goal_location_valid = False
 while not is_goal_location_valid:
-    # Sample goal location
     goal_location = sample_goal_location()
     goal_joint_configuration = np.array(pybullet.calculateInverseKinematics(kuka, number_of_joints - 1, goal_location))
-    # TODO: make below a function
-    for joint in range(number_of_joints):
-        pybullet.resetJointState(kuka, joint, goal_joint_configuration[joint])
+    set_joint_configuration(kuka, goal_joint_configuration)
+    # If we can't actually reach the goal, we want to sample again
     if not check_if_goal_is_reached_in_task_space(kuka, goal_location):
         continue
-    # Check if joint angles that result in goal location cause a collision
-    # TODO: make below a function
-    pybullet.stepSimulation()
-    ground_collision = check_collision_with_ground(kuka, plane)
-    self_collision = check_collision_with_self(kuka)
-    box_collision = any(check_collision_with_boxes(kuka, boxes))
-    if any([ground_collision, self_collision, box_collision]):
+    # Check for collisions
+    update_simulation()
+    if check_collisions(kuka, plane, boxes):
         # TODO: possibly add number of rejections counter for plotting?
         continue
     print("FOUND VALID GOAL LOCATION!")
@@ -156,18 +193,19 @@ parent_vertex_indices = []
 
 # main rrt loop
 is_finished = False
-max_iterations = 100
+max_rrt_iterations = 20  # TODO: for now, to be upped when doing stat studies
+max_sample_iterations = 100
 goal_sample_probability = 0.1  # TODO: make this parameter
-for i in range(max_iterations):
+for rrt_iter in range(max_rrt_iterations):
     if is_finished:
         break
-    print(f"OUTER ITERATION: {i}")
+    print(f"RRT ITERATION: {rrt_iter}")
+
     # Sample new joint state or sample goal joint configuration (found via IK)
-    j = 0
-    to_finish_array = []  # TODO: just for viewing how close to goal are we, remove when good goal tolerance is set
-    valid_joint_configuration_found = False
-    while valid_joint_configuration_found is False:
-        print(f"INNER ITERATION: {j}")
+    sampling_iter = 0
+    for sampling_iter in range(max_sample_iterations):
+        print(f"SAMPLING ITERATION: {sampling_iter}")
+
         if np.random.uniform() < 0.1:
             sampled_joint_state = goal_joint_configuration
             print(f"GOAL STATE: {sampled_joint_state}")
@@ -176,85 +214,48 @@ for i in range(max_iterations):
             print(f"RANDOM STATE: {sampled_joint_state}")
 
         # Collision checking
-        # TODO: make below a function
-        for joint in range(number_of_joints):
-            pybullet.resetJointState(kuka, joint, sampled_joint_state[joint])
-        pybullet.stepSimulation()
-        # TODO: make below a function
-        ground_collision = check_collision_with_ground(kuka, plane)
-        self_collision = check_collision_with_self(kuka)
-        box_collision = any(check_collision_with_boxes(kuka, boxes))
-        if any([ground_collision, self_collision, box_collision]):
+        set_joint_configuration(kuka, sampled_joint_state)
+        update_simulation()
+        if check_collisions(kuka, plane, boxes):
             # TODO: possibly add number of rejections counter for plotting?
-            j += 1
+            sampling_iter += 1
             continue
         else:
             print("FOUND VALID JOINT CONFIGURATION!")
 
-        # Distance checking -- find nearest vertex in graph DO DIFFERENT NORMS
-        # TODO: NEED TO CONSIDER CIRCULAR DISTANCES HERE! WRAP THE ANGLES!
-        def angular_difference(angle_array1, angle_array2):
-            assert angle_array1.shape == angle_array2.shape
-
-            length = angle_array1.shape[0]
-            difference = np.zeros(length)
-            for i, (angle1, angle2) in enumerate(zip(angle_array1, angle_array2)):
-                if np.abs(angle1) + np.abs(angle2) > np.pi:
-                    difference[i] = 2*np.pi - angle1 - angle2
-                else:
-                    difference[i] = angle2 - angle1
-            return difference
-
+        # Find nearest vertex in RRT graph according to a chosen norm
         distances = np.zeros(len(vertices))
-        norm_type = 2
+        norm_type = 2  # TODO: should be a parameter
         # norm_type = 1
         # norm_type = np.inf
         for i, vertex in enumerate(vertices):
             distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
         nearest_vertex_index = np.argmin(distances)
-        nearest_vertex_difference = angular_difference(sampled_joint_state, vertices[nearest_vertex_index])
 
         # We know by assumption that nearest vertex already in RRT graph has no collisions, and we've checked in this
-        # iteration that there are no collisions on the sampled joint state, but what about the path in joint space between
-        # them?
-        # Solution: discretise distance between them and do forward kinematics collision checking
-        def check_for_intermediate_collisions(sampled_joint_state, nearest_vertex, number_of_collision_checking_nodes):
-            nearest_vertex_difference = angular_difference(sampled_joint_state, nearest_vertex)
-            collision_node_increments = nearest_vertex_difference / number_of_collision_checking_nodes
-            for i in range(number_of_collision_checking_nodes):
-                collision_checking_node = sampled_joint_state + (i+1) * collision_node_increments
-                # TODO: make below a function
-                for joint in range(number_of_joints):
-                    pybullet.resetJointState(kuka, joint, collision_checking_node[joint])
-                pybullet.stepSimulation()
-                # TODO: make below a function
-                ground_collision = check_collision_with_ground(kuka, plane)
-                self_collision = check_collision_with_self(kuka)
-                box_collision = any(check_collision_with_boxes(kuka, boxes))
-                if any([ground_collision, self_collision, box_collision]):
-                    return True
-            return False
-
+        # iteration that there are no collisions on the sampled joint state, but what about the path in joint space
+        # between them?
+        # Solution: discretise distance between them into nodes and do forward kinematics collision checking on each one
         number_of_collision_checking_nodes = 100  # TODO: magic number
         nearest_vertex = vertices[nearest_vertex_index]
-        if check_for_intermediate_collisions(sampled_joint_state, nearest_vertex, number_of_collision_checking_nodes):
-            j += 1
+        if check_for_intermediate_collisions(kuka, sampled_joint_state, nearest_vertex, number_of_collision_checking_nodes):
+            sampling_iter += 1
             continue
         else:
             print("COLLISION FREE PATH FOUND!")
 
-        # Now it's verified to be collision free add parent vertex information and add to RRT graph
+        # Now it's verified to be collision free, add parent vertex information, and add to RRT graph
         parent_vertex_indices.append(nearest_vertex_index)
         vertices.append(sampled_joint_state)
 
         # Check if within tolerance of goal
-        for joint in range(number_of_joints):
-            pybullet.resetJointState(kuka, joint, sampled_joint_state[joint])
+        set_joint_configuration(kuka, sampled_joint_state)
         if check_if_goal_is_reached_in_task_space(kuka, goal_location):
             print("DONE!")
             is_finished = True
             break
-        j += 1
+
+        sampling_iter += 1
         # TODO: need to do distance thresholding!!!!!!!!!!!!!
         # TODO: use debug lines to plot how the RRT expands in task space, even though it searches in joint space!
 
