@@ -7,8 +7,8 @@ from utils import angular_difference
 
 class JointSpaceRRT:
     def __init__(self, arena: Arena, max_iterations: int, goal_sample_probability: float,
-                 number_of_joint_space_collision_nodes,
-                 norm_for_distance_checking=2, distance_threshold=4, enable_smoothing=True, use_angular_difference=False):
+                 number_of_joint_space_collision_nodes, norm_for_distance_checking=2, distance_threshold=4,
+                 enable_smoothing=True, use_angular_difference=False, playback_results=True):
         self.arena = arena
 
         self.start_joint_configuration = arena.start_joint_configuration
@@ -31,6 +31,8 @@ class JointSpaceRRT:
         self.enable_smoothing = enable_smoothing
 
         self.use_angular_difference = use_angular_difference
+
+        self.playback_results = playback_results
 
     def sample_candidate_joint_configuration(self):
         if np.random.uniform() < self.goal_sample_probability:
@@ -191,9 +193,12 @@ class JointSpaceRRT:
             vertices_to_goal = list(reversed(vertices_backward_from_goal))
 
             # Send vertex targets to sim and use position control to navigate from start to goal
-            self.arena.play_rrt_results(vertices_to_goal)
+            if self.playback_results:
+                self.arena.play_rrt_results(vertices_to_goal)
+                self.arena.disconnect(pause_before_disconnecting=2)
+            else:
+                self.arena.disconnect()
 
-            self.arena.disconnect(pause_before_disconnecting=2)
             return vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time
         else:
             print("RRT FAILED!")

@@ -30,7 +30,7 @@ arena.populate()
 
 # Initialise RRT
 rrt = JointSpaceRRT(arena, max_iterations, goal_sample_probability,
-                    number_of_joint_space_collision_nodes, use_angular_difference=use_angular_difference)
+                    number_of_joint_space_collision_nodes, use_angular_difference=use_angular_difference, playback_results=False)
 
 vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time = rrt.run()
 proportion_of_time_spent_finding_valid_joint_configuration = total_find_valid_joint_configuration_time / total_rrt_time
