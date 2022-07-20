@@ -6,9 +6,9 @@ from utils import angular_difference
 
 
 class JointSpaceRRT:
-    def __init__(self, arena: Arena, max_iterations: int, goal_sample_probability: float,
-                 number_of_joint_space_collision_nodes, norm_for_distance_checking=2, distance_threshold=4,
-                 enable_smoothing=True, use_angular_difference=False, playback_results=True):
+    def __init__(self, arena: Arena, goal_sample_probability: float = 0.02, max_iterations: int = 500,
+                 number_of_joint_space_collision_nodes: int = 100, norm_for_distance_checking=2, distance_threshold=4,
+                 use_angular_difference=False, enable_smoothing=True, playback_results=True):
         self.arena = arena
 
         self.start_joint_configuration = arena.start_joint_configuration
@@ -37,10 +37,10 @@ class JointSpaceRRT:
     def sample_candidate_joint_configuration(self):
         if np.random.uniform() < self.goal_sample_probability:
             sampled_joint_configuration = self.goal_joint_configuration
-            print(f"SAMPLED GOAL STATE: {sampled_joint_configuration}")
+            # print(f"SAMPLED GOAL STATE: {sampled_joint_configuration}")
         else:
             sampled_joint_configuration = self.arena.sample_random_joint_configuration()
-            print(f"SAMPLED RANDOM STATE: {sampled_joint_configuration}")
+            # print(f"SAMPLED RANDOM STATE: {sampled_joint_configuration}")
         return sampled_joint_configuration
 
     def find_nearest_vertex_index(self, candidate_joint_configuration):
@@ -62,7 +62,7 @@ class JointSpaceRRT:
             else:
                 difference_to_nearest_vertex = self.vertices[nearest_vertex_index] - candidate_joint_configuration
             unit_vector_to_nearest_vertex = difference_to_nearest_vertex / distance_to_nearest_vertex
-            print("THRESHOLD APPLIED TO SAMPLED STATE!")
+            # print("THRESHOLD APPLIED TO SAMPLED STATE!")
             return unit_vector_to_nearest_vertex * self.distance_threshold
         else:
             return candidate_joint_configuration
@@ -84,7 +84,7 @@ class JointSpaceRRT:
             vertex_index = parent_index
             vertex = parent_vertex
             if parent_index == 0:
-                print("FOUND PATH BACKWARD FROM GOAL VERTEX TO START VERTEX!")
+                # print("FOUND PATH BACKWARD FROM GOAL VERTEX TO START VERTEX!")
                 is_first_vertex_reached = True
         return vertices_backward_from_goal, end_effector_locations_backward_from_goal
 
@@ -137,10 +137,10 @@ class JointSpaceRRT:
                 self.arena.set_joint_configuration(sampled_joint_configuration)
                 self.arena.update_simulation()
                 if self.arena.check_collisions():
-                    # TODO: possibly add number of rejections counter for plotting?
                     continue
                 else:
-                    print("FOUND VALID JOINT CONFIGURATION!")
+                    # print("FOUND VALID JOINT CONFIGURATION!")
+                    pass
 
                 # Find nearest vertex in RRT graph according to a chosen norm
                 nearest_vertex_index = self.find_nearest_vertex_index(sampled_joint_configuration)
@@ -154,7 +154,7 @@ class JointSpaceRRT:
                 nearest_vertex = self.vertices[nearest_vertex_index]
                 if not self.arena.check_for_intermediate_collisions_in_joint_space(sampled_joint_configuration, nearest_vertex,
                                                                                    self.number_of_joint_space_collision_nodes):
-                    print("COLLISION FREE PATH FOUND!")
+                    # print("COLLISION FREE PATH FOUND!")
                     is_valid_sample_joint_configuration_found = True
             find_valid_joint_configuration_time_end = time.time()
             total_find_valid_joint_configuration_time += find_valid_joint_configuration_time_end - find_valid_joint_configuration_time_start
@@ -170,7 +170,7 @@ class JointSpaceRRT:
 
             # Check if within tolerance of goal
             if self.arena.check_if_goal_is_reached_in_task_space(sampled_joint_configuration, self.goal_location):
-                print("DONE!")
+                print("RRT DONE!")
                 is_finished = True
                 break
             else:

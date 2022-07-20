@@ -7,10 +7,14 @@ from utils import angular_difference
 
 
 class Arena:
-    def __init__(self, number_of_boxes, x_limits, y_limits, z_limits,
-                 playback_number_of_timesteps=50, playback_dt=0.02, use_angular_difference=False):
+    def __init__(self, number_of_boxes, playback_number_of_timesteps=50, playback_dt=0.02, use_angular_difference=False,
+                 visualise_sim=True):
         # Pybullet plumbing
-        physics_client = pybullet.connect(pybullet.GUI)
+        self.visualise_sim = visualise_sim
+        if self.visualise_sim:
+            physics_client = pybullet.connect(pybullet.GUI)
+        else:
+            physics_client = pybullet.connect(pybullet.DIRECT)
         pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
         pybullet.setPhysicsEngineParameter(enableFileCaching=0)
         pybullet.setGravity(0, 0, -9.8)
@@ -28,13 +32,15 @@ class Arena:
         self.plane = pybullet.loadURDF("plane.urdf")
 
         # Limits
+        x_limits = (-0.8, 0.8)
+        y_limits = (-0.8, 0.8)
+        z_limits = (0, 0.8)  # don't want the box underground
         self.x_min = x_limits[0]
         self.x_max = x_limits[1]
         self.y_min = y_limits[0]
         self.y_max = y_limits[1]
         self.z_min = z_limits[0]
         self.z_max = z_limits[1]
-
         # Boxes
         self.number_of_boxes = number_of_boxes
         self.boxes = []
@@ -127,7 +133,7 @@ class Arena:
                 self.remove_boxes()
                 continue
             else:
-                print("FOUND VALID BOX PLACEMENT!")
+                # print("FOUND VALID BOX PLACEMENT!")
                 is_box_placement_valid = True
 
     def sample_goal_location(self):
@@ -163,9 +169,9 @@ class Arena:
             self.update_simulation()
             if self.check_collisions():
                 continue
-            print("FOUND VALID GOAL LOCATION!")
-            print(f"Goal location: {self.goal_location}")
-            print(f"Goal joint configuration: {self.goal_joint_configuration}")
+            # print("FOUND VALID GOAL LOCATION!")
+            # print(f"Goal location: {self.goal_location}")
+            # print(f"Goal joint configuration: {self.goal_joint_configuration}")
             goal = self.create_goal_marker(self.goal_location)
             is_goal_location_valid = True
 
