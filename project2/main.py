@@ -47,9 +47,10 @@ def run_multiple_joint_space_rrt(number_of_runs, number_of_boxes, goal_sample_pr
     number_of_successes = success_array.count(True)
     # For timing information, find the means
     mean_total_rrt_time = np.mean(total_rrt_time)
+    median_total_rrt_time = np.median(total_rrt_time)
     mean_total_find_valid_joint_configuration_time = np.mean(total_find_valid_joint_configuration_time)
     mean_proportion_of_time_spent_finding_valid_joint_configuration = np.mean(proportion_of_time_spent_finding_valid_joint_configuration_array)
-    return number_of_successes, mean_total_rrt_time, mean_total_find_valid_joint_configuration_time, mean_proportion_of_time_spent_finding_valid_joint_configuration
+    return number_of_successes, mean_total_rrt_time, median_total_rrt_time, mean_total_find_valid_joint_configuration_time, mean_proportion_of_time_spent_finding_valid_joint_configuration
 
 
 def investigate_effect_of_goal_sample_probability(goal_sample_probability_values):
@@ -61,6 +62,7 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     number_of_runs = 20
     number_of_successes_array = []
     mean_total_rrt_time_array = []
+    median_total_rrt_time_array = []
     mean_total_find_valid_joint_configuration_time_array = []
     mean_proportion_of_time_spent_finding_valid_joint_configuration_array = []
     for value in goal_sample_probability_values:
@@ -68,8 +70,9 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
         run_stats = run_multiple_joint_space_rrt(number_of_runs, number_of_boxes, value, norm_type, distance_threshold, use_angular_difference)
         number_of_successes_array.append(run_stats[0])
         mean_total_rrt_time_array.append(run_stats[1])
-        mean_total_find_valid_joint_configuration_time_array.append(run_stats[2])
-        mean_proportion_of_time_spent_finding_valid_joint_configuration_array.append(run_stats[3])
+        median_total_rrt_time_array.append(run_stats[2])
+        mean_total_find_valid_joint_configuration_time_array.append(run_stats[3])
+        mean_proportion_of_time_spent_finding_valid_joint_configuration_array.append(run_stats[4])
 
     fig, ax = plt.subplots()
     ax.scatter(goal_sample_probability_values, number_of_successes_array, c='b')
@@ -77,16 +80,19 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     ax.set_title("Number of successes")
     ax.set_xlabel("goal sample probability")
     ax.set_ylabel("number of successes")
-    ax.set_yticks(np.arange(0, number_of_runs+1))
+    ax.set_yticks(np.arange(0, number_of_runs+5))
     ax.axhline(number_of_runs, linestyle='-.', c='k')
     plt.show()
 
     fig, ax = plt.subplots()
     ax.scatter(goal_sample_probability_values, mean_total_rrt_time_array, c='b')
     ax.grid()
-    ax.set_title("Average total rrt time")
+    ax_mirror = ax.twinx()
+    ax_mirror.scatter(goal_sample_probability_values, median_total_rrt_time_array, c='r', marker='x')
+    ax.set_title("Total rrt time statistics")
     ax.set_xlabel("goal sample probability")
-    ax.set_ylabel("average total rrt time [s]")
+    ax.set_ylabel("average total rrt time [s]", c='b')
+    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
     plt.show()
 
     fig, ax = plt.subplots()
@@ -104,7 +110,68 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
 
 
-# Investigate varying of goal sample probability
-goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
-goal_sample_probability_stats = investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
+def investigate_effect_of_angular_difference():
+    number_of_boxes = 10
+    goal_sample_probability = 0.02
+    norm_type = 2
+    distance_threshold = 4
 
+    angular_difference_settings = [True, False]
+
+    number_of_runs = 20
+    number_of_successes_array = []
+    mean_total_rrt_time_array = []
+    median_total_rrt_time_array = []
+    mean_total_find_valid_joint_configuration_time_array = []
+    mean_proportion_of_time_spent_finding_valid_joint_configuration_array = []
+    for setting in angular_difference_settings:
+        print(f"USING ANGULAR DIFFERENCE: {setting}")
+        run_stats = run_multiple_joint_space_rrt(number_of_runs, number_of_boxes, goal_sample_probability, norm_type, distance_threshold, setting)
+        number_of_successes_array.append(run_stats[0])
+        mean_total_rrt_time_array.append(run_stats[1])
+        median_total_rrt_time_array.append(run_stats[2])
+        mean_total_find_valid_joint_configuration_time_array.append(run_stats[3])
+        mean_proportion_of_time_spent_finding_valid_joint_configuration_array.append(run_stats[4])
+
+    fig, ax = plt.subplots()
+    ax.scatter(angular_difference_settings, number_of_successes_array, c='b')
+    ax.grid()
+    ax.set_title("Number of successes")
+    ax.set_xlabel("use angular difference")
+    ax.set_ylabel("number of successes")
+    ax.set_yticks(np.arange(0, number_of_runs+5))
+    ax.axhline(number_of_runs, linestyle='-.', c='k')
+    plt.show()
+
+    fig, ax = plt.subplots()
+    ax.scatter(angular_difference_settings, mean_total_rrt_time_array, c='b')
+    ax.grid()
+    ax_mirror = ax.twinx()
+    ax_mirror.scatter(angular_difference_settings, median_total_rrt_time_array, c='r', marker='x')
+    ax.set_title("Total rrt time statistics")
+    ax.set_xlabel("use angular difference")
+    ax.set_ylabel("average total rrt time [s]", c='b')
+    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
+    plt.show()
+
+    fig, ax = plt.subplots()
+    table_data = [["Use angular difference", "Proportion of time"]]
+    for i in range(len(angular_difference_settings)):
+        table_data.append([angular_difference_settings[i], round(mean_proportion_of_time_spent_finding_valid_joint_configuration_array[i], 2)])
+    table = ax.table(cellText=table_data, loc='center', cellLoc='center')
+    ax.axis('off')
+    fig.tight_layout()
+    plt.show()
+
+    print(number_of_successes_array)
+    print(mean_total_rrt_time_array)
+    print(mean_total_find_valid_joint_configuration_time_array)
+    print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
+
+
+# Investigate varying of goal sample probability
+# goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
+# investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
+
+# Investigate varying use of angular difference
+investigate_effect_of_angular_difference()

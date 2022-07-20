@@ -126,7 +126,7 @@ class JointSpaceRRT:
         rrt_time_start = time.time()
         total_find_valid_joint_configuration_time = 0
         for iter in range(self.max_iterations):
-            print(f"ITERATION: {iter}")
+            # print(f"ITERATION: {iter}")
 
             is_valid_sample_joint_configuration_found = False
             find_valid_joint_configuration_time_start = time.time()
