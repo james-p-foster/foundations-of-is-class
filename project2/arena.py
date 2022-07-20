@@ -20,8 +20,8 @@ class Arena:
         pybullet.setGravity(0, 0, -9.8)
         pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_GUI, False)
         pybullet.configureDebugVisualizer(pybullet.COV_ENABLE_SHADOWS, True)
-        pybullet.resetDebugVisualizerCamera(cameraDistance=1.400, cameraYaw=58.000, cameraPitch=-42.200,
-                                            cameraTargetPosition=(0.0, 0.0, 0.0))
+        pybullet.resetDebugVisualizerCamera(cameraDistance=1.8, cameraYaw=165.0, cameraPitch=-35.0,
+                                            cameraTargetPosition=(0.0, 0.0, 0.5))
 
         # Robot
         self.robot = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
