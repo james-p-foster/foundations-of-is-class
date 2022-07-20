@@ -124,7 +124,6 @@ class Arena:
             self.update_simulation()
             # If the box placement causes collisions with the robot's starting configuration, sample a new set of boxes
             if self.check_collisions():
-                # TODO: possibly add number of rejections counter for plotting?
                 self.remove_boxes()
                 continue
             else:
@@ -163,7 +162,6 @@ class Arena:
             # Check for collisions
             self.update_simulation()
             if self.check_collisions():
-                # TODO: possibly add number of rejections counter for plotting?
                 continue
             print("FOUND VALID GOAL LOCATION!")
             print(f"Goal location: {self.goal_location}")
