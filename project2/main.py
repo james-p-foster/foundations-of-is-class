@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -313,7 +315,9 @@ distance_threshold = 4
 use_angular_difference = True
 # Without smoothing
 np.random.seed(11)
-arena = Arena(number_of_boxes, use_angular_difference=use_angular_difference)
+arena = Arena(number_of_boxes,
+              use_angular_difference=use_angular_difference,
+              video_export_path="vid/no_smoothing.mp4")
 arena.populate()
 rrt = JointSpaceRRT(arena,
                     goal_sample_probability=goal_sample_probability,
@@ -324,7 +328,9 @@ rrt = JointSpaceRRT(arena,
 rrt.run()
 # Same run with smoothing
 np.random.seed(11)
-arena = Arena(number_of_boxes, use_angular_difference=use_angular_difference)
+arena = Arena(number_of_boxes,
+              use_angular_difference=use_angular_difference,
+              video_export_path="vid/smoothing.mp4")
 arena.populate()
 rrt = JointSpaceRRT(arena,
                     goal_sample_probability=goal_sample_probability,

@@ -8,7 +8,7 @@ from utils import angular_difference
 
 class Arena:
     def __init__(self, number_of_boxes, playback_number_of_timesteps=50, playback_dt=0.02, use_angular_difference=False,
-                 visualise_sim=True):
+                 visualise_sim=True, video_export_path=None):
         # Pybullet plumbing
         self.visualise_sim = visualise_sim
         if self.visualise_sim:
@@ -54,6 +54,12 @@ class Arena:
         self.playback_dt = playback_dt
 
         self.use_angular_difference = use_angular_difference
+
+        if video_export_path is not None:
+            self.record_video = True
+            self.video_export_path = video_export_path
+        else:
+            self.record_video = False
 
     def update_simulation(self):
         pybullet.stepSimulation()
@@ -218,12 +224,16 @@ class Arena:
             return True
 
     def play_rrt_results(self, vertices):
+        if self.record_video:
+            log_id = pybullet.startStateLogging(pybullet.STATE_LOGGING_VIDEO_MP4, self.video_export_path)
         self.set_joint_configuration(self.start_joint_configuration)
         for vertex in vertices:
             pybullet.setJointMotorControlArray(self.robot, range(self.number_of_joints), pybullet.POSITION_CONTROL, vertex)
             for timestep in range(self.playback_number_of_timesteps):
                 self.update_simulation()
                 time.sleep(self.playback_dt)
+        if self.record_video:
+            pybullet.stopStateLogging(log_id)
 
     def disconnect(self, pause_before_disconnecting=None):
         if pause_before_disconnecting is None:
