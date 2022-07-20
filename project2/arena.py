@@ -5,6 +5,7 @@ import time
 
 from utils import angular_difference
 
+
 class Arena:
     def __init__(self, number_of_boxes, x_limits, y_limits, z_limits,
                  playback_number_of_timesteps=50, playback_dt=0.02, use_angular_difference=False):
