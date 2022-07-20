@@ -1,9 +1,11 @@
 import pybullet
 import pybullet_data
 import numpy as np
+import time
 
 class Arena:
-    def __init__(self, number_of_boxes, x_limits, y_limits, z_limits):
+    def __init__(self, number_of_boxes, x_limits, y_limits, z_limits,
+                 playback_number_of_timesteps=50, playback_dt=0.02):
         # Pybullet plumbing
         physics_client = pybullet.connect(pybullet.GUI)
         pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -16,8 +18,8 @@ class Arena:
 
         # Robot
         self.robot = pybullet.loadURDF("assets/kuka/kuka.urdf", basePosition=[0, 0, 0.02], useFixedBase=True)
-        self.number_of_joints = pybullet.getNumJoints(self.robot)  # TODO: this should be probably be in the RRT or a Robot class
-        self.start_joint_configuration = np.zeros(self.number_of_joints)  # TODO: this should be probably be in the RRT or a Robot class
+        self.number_of_joints = pybullet.getNumJoints(self.robot)
+        self.start_joint_configuration = np.zeros(self.number_of_joints)
 
         # Add ground plane
         self.plane = pybullet.loadURDF("plane.urdf")
@@ -37,6 +39,10 @@ class Arena:
         # Goal
         self.goal_location = None
         self.goal_joint_configuration = None
+
+        # For simulating results
+        self.playback_number_of_timesteps = playback_number_of_timesteps
+        self.playback_dt = playback_dt
 
     def update_simulation(self):
         pybullet.stepSimulation()
@@ -73,6 +79,20 @@ class Arena:
             return True
         else:
             return False
+
+    def check_for_intermediate_collisions_in_joint_space(self, start_state, end_state, number_of_collision_checking_nodes):
+        # TODO: IF USING ANGULAR DIFFERENCE:
+        # difference = angular_difference(start_state, end_state)
+        # NOT:
+        difference = end_state - start_state
+        collision_node_increments = difference / number_of_collision_checking_nodes
+        for i in range(number_of_collision_checking_nodes):
+            collision_checking_node = start_state + (i + 1) * collision_node_increments
+            self.set_joint_configuration(collision_checking_node)
+            self.update_simulation()
+            if self.check_collisions():
+                return True
+        return False
 
     def create_boxes(self):
         boxes = []
@@ -112,10 +132,10 @@ class Arena:
         z = np.random.uniform(self.z_min, self.z_max)
         return np.array([x, y, z])
 
-    def check_if_goal_is_reached_in_task_space(self, goal_location):
-        eps = 1e-1  # TODO: magic number
-        end_effector_in_world = np.array(pybullet.getLinkState(self.robot, self.number_of_joints-1)[0])
-        if np.linalg.norm(end_effector_in_world - goal_location) > eps:
+    def check_if_goal_is_reached_in_task_space(self, configuration, goal_location):
+        eps = 1e-1  # This eps will stay as a magic number, too much hassle to move elsewhere
+        end_effector_in_task_space = self.get_end_effector_location_in_task_space(configuration)
+        if np.linalg.norm(end_effector_in_task_space - goal_location) > eps:
             return False
         else:
             return True
@@ -132,9 +152,8 @@ class Arena:
             self.goal_location = self.sample_goal_location()
             self.goal_joint_configuration = np.array(
                 pybullet.calculateInverseKinematics(self.robot, self.number_of_joints-1, self.goal_location))
-            self.set_joint_configuration(self.goal_joint_configuration)
             # If we can't actually reach the goal, we want to sample again
-            if not self.check_if_goal_is_reached_in_task_space(self.goal_location):
+            if not self.check_if_goal_is_reached_in_task_space(self.goal_joint_configuration, self.goal_location):
                 continue
             # Check for collisions
             self.update_simulation()
@@ -147,6 +166,52 @@ class Arena:
             goal = self.create_goal_marker(self.goal_location)
             is_goal_location_valid = True
 
-    def set_joint_configuration(self, joint_configuration):  # TODO:should perhaps be in RRT or robot class?
+    def populate(self):
+        # Important to populate boxes first so they can be used to inform the placement of the goal marker
+        self.populate_with_boxes()
+        self.populate_with_goal()
+
+    def set_joint_configuration(self, joint_configuration):
         for joint in range(len(joint_configuration)):
             pybullet.resetJointState(self.robot, joint, joint_configuration[joint])
+
+    def sample_random_joint_configuration(self):
+        random_joint_configuration = []
+        for joint in range(self.number_of_joints):
+            # Find upper and lower limits of the joint under consideration
+            # [8] returns the lower limit from the list, [9] returns the upper limit from the list
+            lower_limit = pybullet.getJointInfo(self.robot, joint)[8]
+            upper_limit = pybullet.getJointInfo(self.robot, joint)[9]
+            # Now, randomly sample a joint position within those limits
+            position = np.random.uniform(lower_limit, upper_limit)
+            random_joint_configuration.append(position)
+        return np.array(random_joint_configuration)
+
+    def get_end_effector_location_in_task_space(self, joint_configuration):
+        self.set_joint_configuration(joint_configuration)
+        self.update_simulation()
+        return np.array(pybullet.getLinkState(self.robot, self.number_of_joints-1)[0])
+
+    def draw_task_space_line_with_joint_space_inputs(self, start_joint_configuration, end_joint_configuration, colour,
+                                                     thickness):
+        end_effector_location_start = self.get_end_effector_location_in_task_space(start_joint_configuration)
+        end_effector_location_end = self.get_end_effector_location_in_task_space(end_joint_configuration)
+        pybullet.addUserDebugLine(end_effector_location_start, end_effector_location_end, colour, thickness)
+
+    def check_for_intermediate_collisions_in_task_space(self, start_location, end_location):
+        ray_data = pybullet.rayTest(start_location, end_location)
+        # [0][0] gives the pybullet id of the body in collision. If none, then it returns -1 automatically
+        if ray_data[0][0] <= self.robot:
+            # If ray test id is smaller than or equal to robot's, we know it's either "hit" itself
+            # or is collision-free
+            return False
+        else:
+            return True
+
+    def play_rrt_results(self, vertices):
+        self.set_joint_configuration(self.start_joint_configuration)
+        for vertex in vertices:
+            pybullet.setJointMotorControlArray(self.robot, range(self.number_of_joints), pybullet.POSITION_CONTROL, vertex)
+            for timestep in range(self.playback_number_of_timesteps):
+                self.update_simulation()
+                time.sleep(self.playback_dt)
