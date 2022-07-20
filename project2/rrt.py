@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 from arena import Arena
 from utils import angular_difference
@@ -120,10 +121,13 @@ class JointSpaceRRT:
 
     def run(self):
         is_finished = False
+        rrt_time_start = time.time()
+        total_find_valid_joint_configuration_time = 0
         for iter in range(self.max_iterations):
             print(f"ITERATION: {iter}")
 
             is_valid_sample_joint_configuration_found = False
+            find_valid_joint_configuration_time_start = time.time()
             while not is_valid_sample_joint_configuration_found:
                 sampled_joint_configuration = self.sample_candidate_joint_configuration()
 
@@ -150,6 +154,8 @@ class JointSpaceRRT:
                                                                                    self.number_of_joint_space_collision_nodes):
                     print("COLLISION FREE PATH FOUND!")
                     is_valid_sample_joint_configuration_found = True
+            find_valid_joint_configuration_time_end = time.time()
+            total_find_valid_joint_configuration_time += find_valid_joint_configuration_time_end - find_valid_joint_configuration_time_start
 
             # Now it's verified to be a valid joint configuration, add parent vertex information, and add to RRT graph
             self.parent_vertex_indices.append(nearest_vertex_index)
@@ -167,6 +173,8 @@ class JointSpaceRRT:
                 break
             else:
                 iter += 1
+        rrt_time_end = time.time()
+        total_rrt_time = rrt_time_end - rrt_time_start
 
         if is_finished:
             # Find the solution by working backwards from the goal
@@ -185,7 +193,7 @@ class JointSpaceRRT:
             # Send vertex targets to sim and use position control to navigate from start to goal
             self.arena.play_rrt_results(vertices_to_goal)
 
-            return vertices_to_goal  # TODO: also timing information
+            return vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time
         else:
             print("RRT FAILED!")
             return None

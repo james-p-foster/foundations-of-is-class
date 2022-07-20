@@ -32,11 +32,13 @@ arena.populate()
 rrt = JointSpaceRRT(arena, max_iterations, goal_sample_probability,
                     number_of_joint_space_collision_nodes, use_angular_difference=use_angular_difference)
 
-rrt.run()
+vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time = rrt.run()
+proportion_of_time_spent_finding_valid_joint_configuration = total_find_valid_joint_configuration_time / total_rrt_time
+print(f"Vertices to goal:\n{vertices_to_goal}")
+print(f"Total RRT time: {total_rrt_time}")
+print(f"Total time spent finding valid joint configurations: {total_find_valid_joint_configuration_time}")
+print(f"Proportion of time spent finding valid joint configurations: {proportion_of_time_spent_finding_valid_joint_configuration}")
 
 # Pause for a while so you can observe result
 time.sleep(5)
 pybullet.disconnect()
-
-# TODO: project questions
-#   * how to do collision checking in a joint space RRT? Impossible directly -- will need to do forward kinematics each time and do a collision check, interesting to check how this goes vs. the inverse kinematics required for task space rrt
