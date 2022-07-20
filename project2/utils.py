@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def angular_difference(angle_array1, angle_array2):
     """
     Calculate the difference between arrays of angle measurements, taking into account the wrapping nature of angles.
