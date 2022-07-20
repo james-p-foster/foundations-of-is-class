@@ -13,12 +13,16 @@ number_of_boxes = 10
 start_joint_configuration = np.zeros(7)
 max_rrt_iterations = 20  # TODO: for now, to be upped when doing stat studies
 max_sample_iterations = 100
-goal_sample_probability = 0.02
-goal_eps = 1e-1
 number_of_joint_space_collision_nodes = 100
-# TODO: play around with a lot of different norm types and thresholds, it's a default argument atm
 
-arena = Arena(number_of_boxes, x_limits, y_limits, z_limits)
+# TODO: VARY THESE IN YOUR EXPERIMENTS!
+goal_sample_probability = 0.02
+use_angular_difference = True
+norm_type = 2
+distance_threshold = 4
+
+arena = Arena(number_of_boxes, x_limits, y_limits, z_limits,
+              use_angular_difference=use_angular_difference)
 kuka = arena.robot
 plane = arena.plane
 
@@ -27,8 +31,8 @@ arena.populate()
 
 # Initialise RRT
 rrt = JointSpaceRRT(arena, max_rrt_iterations, max_sample_iterations,
-                    goal_sample_probability, goal_eps,
-                    number_of_joint_space_collision_nodes)
+                    goal_sample_probability, number_of_joint_space_collision_nodes,
+                    use_angular_difference=use_angular_difference)
 
 rrt.run()
 

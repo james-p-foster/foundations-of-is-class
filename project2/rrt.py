@@ -1,11 +1,12 @@
 import numpy as np
 
 from arena import Arena
+from utils import angular_difference
 
 class JointSpaceRRT:
     def __init__(self, arena: Arena, max_rrt_iterations: int, max_sample_iterations: int, goal_sample_probability: float,
-                 goal_eps: float, number_of_joint_space_collision_nodes,
-                 norm_for_distance_checking=3, distance_threshold=4, enable_smoothing=True):
+                 number_of_joint_space_collision_nodes,
+                 norm_for_distance_checking=2, distance_threshold=4, enable_smoothing=True, use_angular_difference=False):
         self.arena = arena
 
         self.start_joint_configuration = arena.start_joint_configuration
@@ -18,7 +19,6 @@ class JointSpaceRRT:
         self.max_rrt_iterations = max_rrt_iterations
         self.max_sample_iterations = max_sample_iterations
         self.goal_sample_probability = goal_sample_probability
-        self.goal_eps = goal_eps
 
         self.number_of_joint_space_collision_nodes = number_of_joint_space_collision_nodes
 
@@ -28,6 +28,8 @@ class JointSpaceRRT:
         self.distance_threshold = distance_threshold
 
         self.enable_smoothing = enable_smoothing
+
+        self.use_angular_difference = use_angular_difference
 
     def run(self):
         is_finished = False
@@ -60,18 +62,18 @@ class JointSpaceRRT:
                 # Find nearest vertex in RRT graph according to a chosen norm
                 distances = np.zeros(len(self.vertices))
                 for i, vertex in enumerate(self.vertices):
-                    # TODO: USING ANGULAR DIFFERENCE:
-                    # distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), norm_type)
-                    # NOT:
-                    distances[i] = np.linalg.norm(vertex - sampled_joint_state, self.norm_type)
+                    if self.use_angular_difference:
+                        distances[i] = np.linalg.norm(angular_difference(sampled_joint_state, vertex), self.norm_type)
+                    else:
+                        distances[i] = np.linalg.norm(vertex - sampled_joint_state, self.norm_type)
                 nearest_vertex_index = np.argmin(distances)
                 # Distance thresholding
                 distance_to_nearest_vertex = distances[nearest_vertex_index]
                 if distance_to_nearest_vertex > self.distance_threshold:
-                    # TODO: USING ANGULAR DIFFERENCE:
-                    # difference_to_nearest_vertex = angular_difference(sampled_joint_state, vertices[nearest_vertex_index])
-                    # NOT:
-                    difference_to_nearest_vertex = self.vertices[nearest_vertex_index] - sampled_joint_state
+                    if self.use_angular_difference:
+                        difference_to_nearest_vertex = angular_difference(sampled_joint_state, self.vertices[nearest_vertex_index])
+                    else:
+                        difference_to_nearest_vertex = self.vertices[nearest_vertex_index] - sampled_joint_state
                     unit_vector_to_nearest_vertex = difference_to_nearest_vertex / distance_to_nearest_vertex
                     sampled_joint_state = unit_vector_to_nearest_vertex * self.distance_threshold
                     print("THRESHOLD APPLIED TO SAMPLED STATE!")

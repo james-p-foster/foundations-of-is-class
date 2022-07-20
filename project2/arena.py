@@ -3,9 +3,11 @@ import pybullet_data
 import numpy as np
 import time
 
+from utils import angular_difference
+
 class Arena:
     def __init__(self, number_of_boxes, x_limits, y_limits, z_limits,
-                 playback_number_of_timesteps=50, playback_dt=0.02):
+                 playback_number_of_timesteps=50, playback_dt=0.02, use_angular_difference=False):
         # Pybullet plumbing
         physics_client = pybullet.connect(pybullet.GUI)
         pybullet.setAdditionalSearchPath(pybullet_data.getDataPath())
@@ -44,6 +46,8 @@ class Arena:
         self.playback_number_of_timesteps = playback_number_of_timesteps
         self.playback_dt = playback_dt
 
+        self.use_angular_difference = use_angular_difference
+
     def update_simulation(self):
         pybullet.stepSimulation()
 
@@ -81,10 +85,10 @@ class Arena:
             return False
 
     def check_for_intermediate_collisions_in_joint_space(self, start_state, end_state, number_of_collision_checking_nodes):
-        # TODO: IF USING ANGULAR DIFFERENCE:
-        # difference = angular_difference(start_state, end_state)
-        # NOT:
-        difference = end_state - start_state
+        if self.use_angular_difference:
+            difference = angular_difference(start_state, end_state)
+        else:
+            difference = end_state - start_state
         collision_node_increments = difference / number_of_collision_checking_nodes
         for i in range(number_of_collision_checking_nodes):
             collision_checking_node = start_state + (i + 1) * collision_node_increments
