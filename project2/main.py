@@ -38,7 +38,3 @@ print(f"Vertices to goal:\n{vertices_to_goal}")
 print(f"Total RRT time: {total_rrt_time}")
 print(f"Total time spent finding valid joint configurations: {total_find_valid_joint_configuration_time}")
 print(f"Proportion of time spent finding valid joint configurations: {proportion_of_time_spent_finding_valid_joint_configuration}")
-
-# Pause for a while so you can observe result
-time.sleep(5)
-pybullet.disconnect()

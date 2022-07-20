@@ -193,7 +193,9 @@ class JointSpaceRRT:
             # Send vertex targets to sim and use position control to navigate from start to goal
             self.arena.play_rrt_results(vertices_to_goal)
 
+            self.arena.disconnect(pause_before_disconnecting=2)
             return vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time
         else:
             print("RRT FAILED!")
+            self.arena.disconnect()
             return None, total_rrt_time, total_find_valid_joint_configuration_time

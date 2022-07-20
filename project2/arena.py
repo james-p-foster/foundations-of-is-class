@@ -218,3 +218,10 @@ class Arena:
             for timestep in range(self.playback_number_of_timesteps):
                 self.update_simulation()
                 time.sleep(self.playback_dt)
+
+    def disconnect(self, pause_before_disconnecting=None):
+        if pause_before_disconnecting is None:
+            pybullet.disconnect()
+        else:
+            time.sleep(pause_before_disconnecting)
+            pybullet.disconnect()
