@@ -196,4 +196,4 @@ class JointSpaceRRT:
             return vertices_to_goal, total_rrt_time, total_find_valid_joint_configuration_time
         else:
             print("RRT FAILED!")
-            return None
+            return None, total_rrt_time, total_find_valid_joint_configuration_time
