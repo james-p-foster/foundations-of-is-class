@@ -184,6 +184,9 @@ class JointSpaceRRT:
                 print("RRT DONE!")
                 is_finished = True
                 break
+            elif total_find_valid_joint_configuration_time > 10:
+                print("RRT TIMEOUT!")
+                break
             else:
                 iter += 1
         rrt_time_end = time.time()
