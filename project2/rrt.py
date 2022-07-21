@@ -130,6 +130,7 @@ class JointSpaceRRT:
 
             is_valid_sample_joint_configuration_found = False
             find_valid_joint_configuration_time_start = time.time()
+            sampling_iter = 0
             while not is_valid_sample_joint_configuration_found:
                 sampled_joint_configuration = self.sample_candidate_joint_configuration()
 
@@ -156,6 +157,16 @@ class JointSpaceRRT:
                                                                                    self.number_of_joint_space_collision_nodes):
                     # print("COLLISION FREE PATH FOUND!")
                     is_valid_sample_joint_configuration_found = True
+                else:
+                    sampling_iter += 1
+                if sampling_iter == self.max_iterations:
+                    # We've failed to sample a valid joint configuration this iteration, go to next
+                    break
+
+            if not is_valid_sample_joint_configuration_found:
+                # If we failed to find a valid joint configuration, start over in a new iteration
+                continue
+
             find_valid_joint_configuration_time_end = time.time()
             total_find_valid_joint_configuration_time += find_valid_joint_configuration_time_end - find_valid_joint_configuration_time_start
 
