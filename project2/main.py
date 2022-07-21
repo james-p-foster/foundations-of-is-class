@@ -291,59 +291,59 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 
 
 # Investigate varying number of boxes
-# number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16]
-# investigate_effect_of_number_of_boxes(number_of_boxes_values)
+number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16]
+investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
-# goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
-# investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
+goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
+investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
 
 # Investigate varying use of angular difference
-# investigate_effect_of_angular_difference()
+investigate_effect_of_angular_difference()
 
 # Investigate the use of the 2 norm in distance thresholding
 distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
 investigate_effect_of_distance_threshold_for_given_norm(2, distance_threshold_values)
 
 # Investigate the use of the 1 norm in distance thresholding
-# distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
-# investigate_effect_of_distance_threshold_for_given_norm(1, distance_threshold_values)
+distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
+investigate_effect_of_distance_threshold_for_given_norm(1, distance_threshold_values)
 
 # Investigate the use of the inf norm in distance thresholding
-# distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
-# investigate_effect_of_distance_threshold_for_given_norm(np.inf, distance_threshold_values)
+distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
+investigate_effect_of_distance_threshold_for_given_norm(np.inf, distance_threshold_values)
 
 # Run the RRT with a good seed to get good videos
-# number_of_boxes = 10
-# goal_sample_probability = 0.02
-# norm_type = 2
-# distance_threshold = 4
-# use_angular_difference = True
+number_of_boxes = 10
+goal_sample_probability = 0.02
+norm_type = 2
+distance_threshold = 4
+use_angular_difference = True
 
 # Without smoothing
-# np.random.seed(11)
-# arena = Arena(number_of_boxes,
-#               use_angular_difference=use_angular_difference,
-#               video_export_path="vid/no_smoothing.mp4")
-# arena.populate()
-# rrt = JointSpaceRRT(arena,
-#                     goal_sample_probability=goal_sample_probability,
-#                     norm_for_distance_checking=norm_type,
-#                     distance_threshold=distance_threshold,
-#                     use_angular_difference=use_angular_difference,
-#                     enable_smoothing=False)
-# rrt.run()
+np.random.seed(11)
+arena = Arena(number_of_boxes,
+              use_angular_difference=use_angular_difference,
+              video_export_path="vid/no_smoothing.mp4")
+arena.populate()
+rrt = JointSpaceRRT(arena,
+                    goal_sample_probability=goal_sample_probability,
+                    norm_for_distance_checking=norm_type,
+                    distance_threshold=distance_threshold,
+                    use_angular_difference=use_angular_difference,
+                    enable_smoothing=False)
+rrt.run()
 
 # Same run with smoothing
-# np.random.seed(11)
-# arena = Arena(number_of_boxes,
-#               use_angular_difference=use_angular_difference,
-#               video_export_path="vid/smoothing.mp4")
-# arena.populate()
-# rrt = JointSpaceRRT(arena,
-#                     goal_sample_probability=goal_sample_probability,
-#                     norm_for_distance_checking=norm_type,
-#                     distance_threshold=distance_threshold,
-#                     use_angular_difference=use_angular_difference,
-#                     enable_smoothing=True)
-# rrt.run()
+np.random.seed(11)
+arena = Arena(number_of_boxes,
+              use_angular_difference=use_angular_difference,
+              video_export_path="vid/smoothing.mp4")
+arena.populate()
+rrt = JointSpaceRRT(arena,
+                    goal_sample_probability=goal_sample_probability,
+                    norm_for_distance_checking=norm_type,
+                    distance_threshold=distance_threshold,
+                    use_angular_difference=use_angular_difference,
+                    enable_smoothing=True)
+rrt.run()
