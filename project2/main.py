@@ -201,15 +201,15 @@ def investigate_effect_of_angular_difference():
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
-    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
+    ax.scatter(angular_difference_settings, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(angular_difference_settings, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
     ax.legend(loc="upper left")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("use angular difference")
     ax.set_ylabel("time [s]")
-    ax.set_xticks(number_of_boxes_values)
-    ax.set_xticklabels(number_of_boxes_values)
+    ax.set_xticks(angular_difference_settings)
+    ax.set_xticklabels(angular_difference_settings)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -262,15 +262,16 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
-    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
+    ax.scatter(distance_threshold_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(distance_threshold_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax.legend(loc="upper left")
+    ax.legend(loc="upper right")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("distance threshold")
     ax.set_ylabel("time [s]")
-    ax.set_xticks(number_of_boxes_values)
-    ax.set_xticklabels(number_of_boxes_values)
+    plt.xscale("log")
+    ax.set_xticks(distance_threshold_values)
+    ax.set_xticklabels(distance_threshold_values)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -294,15 +295,15 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 # investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
-goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
-investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
+# goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
+# investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
 
 # Investigate varying use of angular difference
 # investigate_effect_of_angular_difference()
 
 # Investigate the use of the 2 norm in distance thresholding
-# distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
-# investigate_effect_of_distance_threshold_for_given_norm(2, distance_threshold_values)
+distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
+investigate_effect_of_distance_threshold_for_given_norm(2, distance_threshold_values)
 
 # Investigate the use of the 1 norm in distance thresholding
 # distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
