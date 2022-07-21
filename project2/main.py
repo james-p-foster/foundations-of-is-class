@@ -171,7 +171,7 @@ def investigate_effect_of_angular_difference():
 
     angular_difference_settings = [True, False]
 
-    number_of_runs = 20
+    number_of_runs = 3
     number_of_successes_array = []
     mean_total_rrt_time_array = []
     median_total_rrt_time_array = []
@@ -194,6 +194,8 @@ def investigate_effect_of_angular_difference():
     ax.set_ylabel("number of successes")
     ax.set_yticks(np.arange(0, number_of_runs+5))
     ax.axhline(number_of_runs, linestyle='-.', c='k')
+    ax.set_xticks(angular_difference_settings)
+    ax.set_xticklabels(angular_difference_settings)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -205,6 +207,8 @@ def investigate_effect_of_angular_difference():
     ax.set_xlabel("use angular difference")
     ax.set_ylabel("average total rrt time [s]", c='b')
     ax_mirror.set_ylabel("median total rrt time [s]", c='r')
+    ax.set_xticks(angular_difference_settings)
+    ax.set_xticklabels(angular_difference_settings)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -285,15 +289,15 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 
 
 # Investigate varying number of boxes
-number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-investigate_effect_of_number_of_boxes(number_of_boxes_values)
+# number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+# investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
 # goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
 # investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
 
 # Investigate varying use of angular difference
-# investigate_effect_of_angular_difference()
+investigate_effect_of_angular_difference()
 
 # Investigate the use of the 2 norm in distance thresholding
 # distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
