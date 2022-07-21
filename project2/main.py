@@ -82,7 +82,7 @@ def investigate_effect_of_number_of_boxes(number_of_boxes_values):
     ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
     ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("number of boxes")
     ax.set_ylabel("time [s]")
@@ -138,15 +138,15 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
-    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
+    ax.scatter(goal_sample_probability_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(goal_sample_probability_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("goal sample probability")
     ax.set_ylabel("time [s]")
-    ax.set_xticks(number_of_boxes_values)
-    ax.set_xticklabels(number_of_boxes_values)
+    ax.set_xticks(goal_sample_probability_values)
+    ax.set_xticklabels(goal_sample_probability_values)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -204,7 +204,7 @@ def investigate_effect_of_angular_difference():
     ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
     ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("use angular difference")
     ax.set_ylabel("time [s]")
@@ -265,7 +265,7 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
     ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
     ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax.legend()
+    ax.legend(loc="upper left")
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("distance threshold")
     ax.set_ylabel("time [s]")
@@ -290,12 +290,12 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 
 
 # Investigate varying number of boxes
-number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16]
-investigate_effect_of_number_of_boxes(number_of_boxes_values)
+# number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16]
+# investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
-# goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
-# investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
+goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
+investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
 
 # Investigate varying use of angular difference
 # investigate_effect_of_angular_difference()
