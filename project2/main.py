@@ -38,9 +38,9 @@ def run_multiple_joint_space_rrt(number_of_runs, number_of_boxes, goal_sample_pr
     # Report the number of successes
     number_of_successes = success_array.count(True)
     # For timing information, find the means
-    mean_total_rrt_time = np.mean(total_rrt_time)
-    median_total_rrt_time = np.median(total_rrt_time)
-    mean_total_find_valid_joint_configuration_time = np.mean(total_find_valid_joint_configuration_time)
+    mean_total_rrt_time = np.mean(total_rrt_time_array)
+    median_total_rrt_time = np.median(total_rrt_time_array)
+    mean_total_find_valid_joint_configuration_time = np.mean(total_find_valid_joint_configuration_time_array)
     mean_proportion_of_time_spent_finding_valid_joint_configuration = np.mean(proportion_of_time_spent_finding_valid_joint_configuration_array)
     return number_of_successes, mean_total_rrt_time, median_total_rrt_time, mean_total_find_valid_joint_configuration_time, mean_proportion_of_time_spent_finding_valid_joint_configuration
 
@@ -285,8 +285,8 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 
 
 # Investigate varying number of boxes
-# number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-# investigate_effect_of_number_of_boxes(number_of_boxes_values)
+number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
 # goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
@@ -308,34 +308,36 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 # investigate_effect_of_distance_threshold_for_given_norm(np.inf, distance_threshold_values)
 
 # Run the RRT with a good seed to get good videos
-number_of_boxes = 10
-goal_sample_probability = 0.02
-norm_type = 2
-distance_threshold = 4
-use_angular_difference = True
+# number_of_boxes = 10
+# goal_sample_probability = 0.02
+# norm_type = 2
+# distance_threshold = 4
+# use_angular_difference = True
+
 # Without smoothing
-np.random.seed(11)
-arena = Arena(number_of_boxes,
-              use_angular_difference=use_angular_difference,
-              video_export_path="vid/no_smoothing.mp4")
-arena.populate()
-rrt = JointSpaceRRT(arena,
-                    goal_sample_probability=goal_sample_probability,
-                    norm_for_distance_checking=norm_type,
-                    distance_threshold=distance_threshold,
-                    use_angular_difference=use_angular_difference,
-                    enable_smoothing=False)
-rrt.run()
+# np.random.seed(11)
+# arena = Arena(number_of_boxes,
+#               use_angular_difference=use_angular_difference,
+#               video_export_path="vid/no_smoothing.mp4")
+# arena.populate()
+# rrt = JointSpaceRRT(arena,
+#                     goal_sample_probability=goal_sample_probability,
+#                     norm_for_distance_checking=norm_type,
+#                     distance_threshold=distance_threshold,
+#                     use_angular_difference=use_angular_difference,
+#                     enable_smoothing=False)
+# rrt.run()
+
 # Same run with smoothing
-np.random.seed(11)
-arena = Arena(number_of_boxes,
-              use_angular_difference=use_angular_difference,
-              video_export_path="vid/smoothing.mp4")
-arena.populate()
-rrt = JointSpaceRRT(arena,
-                    goal_sample_probability=goal_sample_probability,
-                    norm_for_distance_checking=norm_type,
-                    distance_threshold=distance_threshold,
-                    use_angular_difference=use_angular_difference,
-                    enable_smoothing=True)
-rrt.run()
+# np.random.seed(11)
+# arena = Arena(number_of_boxes,
+#               use_angular_difference=use_angular_difference,
+#               video_export_path="vid/smoothing.mp4")
+# arena.populate()
+# rrt = JointSpaceRRT(arena,
+#                     goal_sample_probability=goal_sample_probability,
+#                     norm_for_distance_checking=norm_type,
+#                     distance_threshold=distance_threshold,
+#                     use_angular_difference=use_angular_difference,
+#                     enable_smoothing=True)
+# rrt.run()
