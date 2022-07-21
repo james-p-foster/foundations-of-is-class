@@ -49,7 +49,7 @@ def investigate_effect_of_number_of_boxes(number_of_boxes_values):
     goal_sample_probability = 0.02
     norm_type = 2
     distance_threshold = 4
-    use_angular_difference = True
+    use_angular_difference = False
 
     number_of_runs = 20
     number_of_successes_array = []
@@ -79,20 +79,19 @@ def investigate_effect_of_number_of_boxes(number_of_boxes_values):
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b')
+    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax_mirror = ax.twinx()
-    ax_mirror.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x')
+    ax.legend()
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("number of boxes")
-    ax.set_ylabel("average total rrt time [s]", c='b')
-    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
+    ax.set_ylabel("time [s]")
     ax.set_xticks(number_of_boxes_values)
     ax.set_xticklabels(number_of_boxes_values)
     plt.show()
 
     fig, ax = plt.subplots()
-    table_data = [["Goal sample probability", "Proportion of time"]]
+    table_data = [["Number of boxes", "Proportion of time"]]
     for i in range(len(number_of_boxes_values)):
         table_data.append([number_of_boxes_values[i], round(mean_proportion_of_time_spent_finding_valid_joint_configuration_array[i], 2)])
     table = ax.table(cellText=table_data, loc='center', cellLoc='center')
@@ -102,6 +101,7 @@ def investigate_effect_of_number_of_boxes(number_of_boxes_values):
 
     print(number_of_successes_array)
     print(mean_total_rrt_time_array)
+    print(median_total_rrt_time_array)
     print(mean_total_find_valid_joint_configuration_time_array)
     print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
 
@@ -110,7 +110,7 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     number_of_boxes = 10
     norm_type = 2
     distance_threshold = 4
-    use_angular_difference = True
+    use_angular_difference = False
 
     number_of_runs = 20
     number_of_successes_array = []
@@ -138,14 +138,15 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(goal_sample_probability_values, mean_total_rrt_time_array, c='b')
+    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax_mirror = ax.twinx()
-    ax_mirror.scatter(goal_sample_probability_values, median_total_rrt_time_array, c='r', marker='x')
+    ax.legend()
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("goal sample probability")
-    ax.set_ylabel("average total rrt time [s]", c='b')
-    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
+    ax.set_ylabel("time [s]")
+    ax.set_xticks(number_of_boxes_values)
+    ax.set_xticklabels(number_of_boxes_values)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -159,6 +160,7 @@ def investigate_effect_of_goal_sample_probability(goal_sample_probability_values
 
     print(number_of_successes_array)
     print(mean_total_rrt_time_array)
+    print(median_total_rrt_time_array)
     print(mean_total_find_valid_joint_configuration_time_array)
     print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
 
@@ -171,7 +173,7 @@ def investigate_effect_of_angular_difference():
 
     angular_difference_settings = [True, False]
 
-    number_of_runs = 3
+    number_of_runs = 20
     number_of_successes_array = []
     mean_total_rrt_time_array = []
     median_total_rrt_time_array = []
@@ -199,16 +201,15 @@ def investigate_effect_of_angular_difference():
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(angular_difference_settings, mean_total_rrt_time_array, c='b')
+    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax_mirror = ax.twinx()
-    ax_mirror.scatter(angular_difference_settings, median_total_rrt_time_array, c='r', marker='x')
+    ax.legend()
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("use angular difference")
-    ax.set_ylabel("average total rrt time [s]", c='b')
-    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
-    ax.set_xticks(angular_difference_settings)
-    ax.set_xticklabels(angular_difference_settings)
+    ax.set_ylabel("time [s]")
+    ax.set_xticks(number_of_boxes_values)
+    ax.set_xticklabels(number_of_boxes_values)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -222,6 +223,7 @@ def investigate_effect_of_angular_difference():
 
     print(number_of_successes_array)
     print(mean_total_rrt_time_array)
+    print(median_total_rrt_time_array)
     print(mean_total_find_valid_joint_configuration_time_array)
     print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
 
@@ -229,7 +231,7 @@ def investigate_effect_of_angular_difference():
 def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_threshold_values):
     number_of_boxes = 10
     goal_sample_probability = 0.02
-    use_angular_difference = True
+    use_angular_difference = False
 
     number_of_runs = 20
     number_of_successes_array = []
@@ -260,17 +262,15 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
     plt.show()
 
     fig, ax = plt.subplots()
-    ax.scatter(distance_threshold_values, mean_total_rrt_time_array, c='b')
+    ax.scatter(number_of_boxes_values, mean_total_rrt_time_array, c='b', label="average rrt time")
+    ax.scatter(number_of_boxes_values, median_total_rrt_time_array, c='r', marker='x', label="median rrt time")
     ax.grid()
-    ax_mirror = ax.twinx()
-    ax_mirror.scatter(distance_threshold_values, median_total_rrt_time_array, c='r', marker='x')
+    ax.legend()
     ax.set_title("Total rrt time statistics")
     ax.set_xlabel("distance threshold")
-    ax.set_ylabel("average total rrt time [s]", c='b')
-    ax_mirror.set_ylabel("median total rrt time [s]", c='r')
-    plt.xscale("log")
-    ax.set_xticks(distance_threshold_values)
-    ax.set_xticklabels(distance_threshold_values)
+    ax.set_ylabel("time [s]")
+    ax.set_xticks(number_of_boxes_values)
+    ax.set_xticklabels(number_of_boxes_values)
     plt.show()
 
     fig, ax = plt.subplots()
@@ -284,20 +284,21 @@ def investigate_effect_of_distance_threshold_for_given_norm(norm_type, distance_
 
     print(number_of_successes_array)
     print(mean_total_rrt_time_array)
+    print(median_total_rrt_time_array)
     print(mean_total_find_valid_joint_configuration_time_array)
     print(mean_proportion_of_time_spent_finding_valid_joint_configuration_array)
 
 
 # Investigate varying number of boxes
-# number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-# investigate_effect_of_number_of_boxes(number_of_boxes_values)
+number_of_boxes_values = [0, 2, 4, 6, 8, 10, 12, 14, 16]
+investigate_effect_of_number_of_boxes(number_of_boxes_values)
 
 # Investigate varying of goal sample probability
 # goal_sample_probability_values = [0.02, 0.04, 0.06, 0.08, 0.1]
 # investigate_effect_of_goal_sample_probability(goal_sample_probability_values)
 
 # Investigate varying use of angular difference
-investigate_effect_of_angular_difference()
+# investigate_effect_of_angular_difference()
 
 # Investigate the use of the 2 norm in distance thresholding
 # distance_threshold_values = [0.25, 0.5, 1, 2, 4, 8, 16, 32]
