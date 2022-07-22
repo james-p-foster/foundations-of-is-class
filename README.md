@@ -11,4 +11,4 @@
     ```
     conda env create -f environment.yml
     ```
-4. Navigate to the subdirectory you are interested in (e.g. ```project 1```), and follow the ```README.md``` in that subdirectory for details on how to run the code.
+4. Navigate to the subdirectory you are interested in (e.g. ```project1```), and follow the ```README.md``` in that subdirectory for details on how to run the code.
